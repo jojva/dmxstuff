@@ -1,0 +1,20 @@
+#example DMX script file
+
+#static value
+dmx_0=23
+dmx_1=254
+
+#sine function.  Period is in seconds, min and max are respective values.
+dmx_2=sin(period=4,min=56,max=128)
+
+#trigger function
+dmx_3=keytrigger(key=h,off=10,on=130)
+#this would require a seperate gpi board
+dmx_4=gpitrigger(gpichl=2,off=10,on=130)
+
+#combinations
+#multiply can be used to activate triggers
+dmx_5=keytrigger(key=h,off=0,on=255)*sin(period=3,min=12,max=190)
+#envelope
+dmx_6=exponential(direction=down,period=4,reset=20,min=0,max=255)*cos(period=1,min=60,max=100)
+
