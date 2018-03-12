@@ -141,7 +141,9 @@ int initUSB()
                 udevmidi=usb_open(dev);
                 printf("debug: usb_open MIDI gave 0x%x\n",udevmidi);
                 usb_set_configuration(udev, 1);
+                printf("ça crash après ça ?\n");
                 r=usb_claim_interface(udev, 0);
+                printf("Ou ça ?\n");
                 if(r<0){
                     printf("Error: usb_claim_interface returned %d\n",r);
                     abort();
@@ -149,7 +151,9 @@ int initUSB()
                 while(1)
                 {
                     char bytes[1024];
+                    printf("Ou ça numéro 2 ?\n");
                     int ret = usb_interrupt_read(udevmidi, 0x1, bytes, 1024, 1000);
+                    printf("Ou ça numéro 3 ?\n");
                     if(ret < 0)
                     {
                         printf("Error reading MIDI packet (%d)\n", ret);
