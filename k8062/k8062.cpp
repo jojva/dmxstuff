@@ -17,7 +17,7 @@ bool k8062_client::connect()
     shmid=shmget(0x56444D58,sizeof(int)*522, 0666);
     shm=(int *)shmat(shmid,NULL,0);
 
-    printf("k8062 startup: shmid=0x%x (%d) shm=0x%x (%d)\n",(unsigned int)shmid,shmid,(unsigned int)shm,shm);
+    printf("k8062 startup: shmid=0x%x (%d) shm=0x%x (%d)\n",(unsigned int)shmid,shmid,shm,shm);
     if(shm!=(int*)-1){
  	connected=true;
         dmx_maxchannels=shm;
