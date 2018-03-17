@@ -1,5 +1,5 @@
 # Synesthesizer
-Synesthesizer, a.k.a. MIDI to DMX converter based on fredex42/dmxstuff and aseqdump
+Synesthesizer, a MIDI to DMX converter based on fredex42/dmxstuff and aseqdump
 
 ------------
 How to install:
