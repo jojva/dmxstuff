@@ -8,6 +8,8 @@ extern "C"
 #include "aseqdump.h"
 }
 
+#include <algorithm>
+#include <chrono>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -16,8 +18,14 @@ extern "C"
 #include <sys/poll.h>
 #include <alsa/asoundlib.h>
 
-struct pollfd *pfds;
-int npfds;
+using namespace std::chrono;
+
+#define MAX_CHANNELS            12
+#define DELAY_SUSTAIN_RELEASE   80
+
+static struct pollfd *pfds;
+static int npfds;
+static BYTE dmx_channels[MAX_CHANNELS];
 
 void init_aseqdump(int argc, char *argv[])
 {
@@ -89,6 +97,22 @@ void close_aseqdump(void)
     snd_seq_close(seq);
 }
 
+void update_channels(k8062_client& dmx)
+{
+    static milliseconds ms_last = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+    milliseconds ms_now = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
+    auto diff = duration_cast<milliseconds>(ms_now - ms_last).count();
+    if(diff > 10)
+    {
+        for(int channel = 0; channel < MAX_CHANNELS; channel++)
+        {
+            dmx_channels[channel] = std::max(0, dmx_channels[channel] - 10);
+            dmx.set_channel(channel, dmx_channels[channel]);
+        }
+        ms_last += milliseconds(10);
+    }
+}
+
 void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
 {
     printf("%3d:%-3d ", ev->source.client, ev->source.port);
@@ -96,22 +120,22 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
     case SND_SEQ_EVENT_NOTEON:
     {
         // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
-        BYTE dmx_channel = (BYTE)(ev->data.note.note % 12);
+        int channel = ev->data.note.note % 12;
         if (ev->data.note.velocity)
         {
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             printf("Let there be lights! With velocity!\n");
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-            BYTE velocity = (BYTE)(ev->data.note.velocity * 2);
-            dmx.set_channel(dmx_channel, velocity);
+            dmx_channels[channel] = (BYTE)(ev->data.note.velocity * 2);
+            dmx.set_channel(channel, dmx_channels[channel]);
         }
         else
         {
             printf("Note off               %2d, note %d\n",
                    ev->data.note.channel, ev->data.note.note);
             printf("Let there be lights!\n");
-            dmx.set_channel(dmx_channel, 254);
+            dmx.set_channel(channel, 254);
         }
         break;
     }
@@ -120,8 +144,8 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
         printf("Note off               %2d, note %d, velocity %d\n",
                ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
         // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
-        BYTE dmx_channel = (BYTE)(ev->data.note.note % 12);
-        dmx.set_channel(dmx_channel, 0);
+        int channel = ev->data.note.note % 12;
+        dmx.set_channel(channel, 0);
         break;
     }
     case SND_SEQ_EVENT_KEYPRESS:
@@ -285,6 +309,7 @@ void run(k8062_client& dmx)
             break;
         int err;
         do {
+            update_channels(dmx);
             snd_seq_event_t *event;
             err = snd_seq_event_input(seq, &event);
             if (err < 0)
@@ -305,6 +330,10 @@ int main(int argc,char *argv[])
     if(!dmx.is_connected()){
         puts("Error: Unable to connect to dmx daemon.\n");
         exit(1);
+    }
+    for(int i = 0; i < MAX_CHANNELS; i++)
+    {
+        dmx_channels[i] = 0;
     }
     // Init MIDI interface
     init_aseqdump(argc, argv);
