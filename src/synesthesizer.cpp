@@ -98,6 +98,12 @@ void close_aseqdump(void)
     snd_seq_close(seq);
 }
 
+void send_dmx(k8062_client& dmx, BYTE channel, BYTE velocity)
+{
+    printf("Sending velocity %d to channel %d\n", velocity, channel);
+    dmx.set_channel(channel, velocity);
+}
+
 void update_channels(k8062_client& dmx)
 {
     static milliseconds ms_last = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
@@ -111,7 +117,7 @@ void update_channels(k8062_client& dmx)
             if(dmx_channels_release[channel])
             {
                 dmx_channels[channel] = std::max(0, dmx_channels[channel] - 10);
-                dmx.set_channel(channel, dmx_channels[channel]);
+                send_dmx(dmx, (BYTE)channel, dmx_channels[channel]);
             }
         }
         ms_last += milliseconds(update_delay);
@@ -131,17 +137,15 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
         {
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
-            printf("Let there be lights! With velocity!\n");
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
             dmx_channels[channel] = (BYTE)(ev->data.note.velocity * 2);
-            dmx.set_channel(channel, dmx_channels[channel]);
+            send_dmx(dmx, (BYTE)channel, dmx_channels[channel]);
         }
         else
         {
             printf("Note off               %2d, note %d\n",
                    ev->data.note.channel, ev->data.note.note);
-            printf("Let there be lights!\n");
-            dmx.set_channel(channel, 254);
+            send_dmx(dmx, (BYTE)channel, 254);
         }
         break;
     }
