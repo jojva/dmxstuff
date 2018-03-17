@@ -22,8 +22,7 @@
 
 struct usb_bus *bus;
 struct usb_device *dev;
-// usb_dev_handle *udev;
-usb_dev_handle *udevmidi;
+usb_dev_handle *udev;
 int *channels;
 int *maxchannel;
 int *shutdown;
@@ -33,138 +32,112 @@ int shmid;
 
 void write_command ( unsigned char *data )
 {
-    int r;
+int r;
 
-    //putchar('.');
-    //fflush(stdout);
-    r=usb_interrupt_write(udevmidi,0x1,(char*)data,8,20);
-    if(r<0){
-        printf("usb_interrupt_write returned %d\n",r);
-        fflush(stdout);
-        abort();
-    }
+	//putchar('.');
+	//fflush(stdout);
+  r=usb_interrupt_write(udev,0x1,(char*)data,8,20);
+  if(r<0){
+	printf("usb_interrupt_write returned %d\n",r);
+	fflush(stdout);
+	abort();
+  }
 }
 
 void sendDMX()
 {
-    int i, n;
-    unsigned char data[8];
-    int m;
+  int i, n;
+  unsigned char data[8];
+  int m;
 
-    m=*maxchannel;
-    for (i=0;(i<100) && !channels[i] && (i < m - 6);i++);
+  m=*maxchannel;
+  for (i=0;(i<100) && !channels[i] && (i < m - 6);i++); 
 
 #ifdef DUMP_CHANNELS
-    for(i=0;i<255;++i){
-        printf("%02x ",channels[i]);
-        ++n;
-        if(n>255/8){
-            printf("\n");
-            n=0;
-        }
-    }
-    printf("\n\n");
-    fflush(stdout);
+for(i=0;i<255;++i){
+	printf("%02x ",channels[i]);
+	++n;
+	if(n>255/8){
+		printf("\n");
+		n=0;
+	}
+}
+printf("\n\n");
+fflush(stdout);
 #endif
-    data[0] = 4; /* Start of data, number of leading 0 and 6 channels */
-    data[1] = i+1;
-    data[2] = channels[i];
-    data[3] = channels[i+1];
-    data[4] = channels[i+2];
-    data[5] = channels[i+3];
-    data[6] = channels[i+4];
-    data[7] = channels[i+5];
+  data[0] = 4; /* Start of data, number of leading 0 and 6 channels */
+  data[1] = i+1;
+  data[2] = channels[i];
+  data[3] = channels[i+1];
+  data[4] = channels[i+2];
+  data[5] = channels[i+3];
+  data[6] = channels[i+4];
+  data[7] = channels[i+5];
+  write_command(data);
+  i+=6;
+
+  while (i < m - 7) {
+    if (!channels[i]) {
+      for(n=i+1;(n < m - 6) && (n-i<100) && !channels[n] ;n++);
+        data[0] = 5;
+        data[1] = n-i;
+	data[2] = channels[n];
+	data[3] = channels[n+1];
+	data[4] = channels[n+2];
+	data[5] = channels[n+3];
+	data[6] = channels[n+4];
+	data[7] = channels[n+5];
+	write_command(data);
+	i=n+6;
+    } else {
+      data[0] = 2; /* 7 channels */
+      data[1] = channels[i];
+      data[2] = channels[i+1];
+      data[3] = channels[i+2];
+      data[4] = channels[i+3];
+      data[5] = channels[i+4];
+      data[6] = channels[i+5];
+      data[7] = channels[i+6];
+      write_command(data);
+      i+=7;
+    }
+  }
+  
+  for(;i < m;i++) {
+    data[0] = 3; /* send one channel */
+    data[1] = channels[i];
     write_command(data);
-    i+=6;
-
-    while (i < m - 7) {
-        if (!channels[i]) {
-            for(n=i+1;(n < m - 6) && (n-i<100) && !channels[n] ;n++);
-            data[0] = 5;
-            data[1] = n-i;
-            data[2] = channels[n];
-            data[3] = channels[n+1];
-            data[4] = channels[n+2];
-            data[5] = channels[n+3];
-            data[6] = channels[n+4];
-            data[7] = channels[n+5];
-            write_command(data);
-            i=n+6;
-        } else {
-            data[0] = 2; /* 7 channels */
-            data[1] = channels[i];
-            data[2] = channels[i+1];
-            data[3] = channels[i+2];
-            data[4] = channels[i+3];
-            data[5] = channels[i+4];
-            data[6] = channels[i+5];
-            data[7] = channels[i+6];
-            write_command(data);
-            i+=7;
-        }
-    }
-
-    for(;i < m;i++) {
-        data[0] = 3; /* send one channel */
-        data[1] = channels[i];
-        write_command(data);
-    }
+  }
 }
 
 int initUSB()
 {
-    int r;
+int r;
 
-    usb_init();
-    usb_find_busses();
-    usb_find_devices();
+  usb_init();
+  usb_find_busses();
+  usb_find_devices();
 
-    for (bus = usb_busses; bus; bus = bus->next) {
-        for (dev = bus->devices; dev; dev = dev->next) {
-            //      if ( (dev->descriptor.idVendor == 0x10cf) &&
-            //           (dev->descriptor.idProduct == 0x8062 ) ) {
-            //           udev=usb_open(dev);
-            //	   printf("debug: usb_open gave 0x%x\n",udev);
-            //#if defined(LIBUSB_HAS_GET_DRIVER_NP) && defined(LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP)
-            //           usb_detach_kernel_driver_np( udev, 0);
-            //#endif
-            //           usb_set_configuration(udev, 1);
-            //           r=usb_claim_interface(udev, 0);
-            //	   if(r<0){
-            //		printf("Error: usb_claim_interface returned %d\n",r);
-            //		abort();
-            //	   }
-            //           return 1;
-            //      }
-            if( (dev->descriptor.idVendor == 0xfc02) &&
-                    (dev->descriptor.idProduct == 0x0101 ) ) {
-                udevmidi=usb_open(dev);
-                printf("debug: usb_open MIDI gave 0x%x\n",udevmidi);
-                usb_set_configuration(udevmidi, 1);
-                while(1)
-                {
-                    char bytes[1024];
-                    printf("Ou ça numéro 2 ?\n");
-                    int ret = usb_interrupt_read(udevmidi, 0x1, bytes, 1024, 1000);
-                    printf("Ou ça numéro 3 ?\n");
-                    if(ret < 0)
-                    {
-                        printf("Error reading MIDI packet (%d)\n", ret);
-                    }
-                    else if(ret > 0)
-                    {
-                        printf("Read %d bytes of MIDI\n", ret);
-                    }
-                    else
-                    {
-                        printf("Did not read any MIDI packet\n");
-                    }
-                }
-                return 1;
-            }
-        }
+  for (bus = usb_busses; bus; bus = bus->next) {
+    for (dev = bus->devices; dev; dev = dev->next) {
+      if ( (dev->descriptor.idVendor == 0x10cf) &&
+           (dev->descriptor.idProduct == 0x8062 ) ) {
+           udev=usb_open(dev);
+	   printf("debug: usb_open gave 0x%x\n",udev);
+#if defined(LIBUSB_HAS_GET_DRIVER_NP) && defined(LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP)
+           usb_detach_kernel_driver_np( udev, 0);
+#endif
+           usb_set_configuration(udev, 1);
+           r=usb_claim_interface(udev, 0);
+	   if(r<0){
+		printf("Error: usb_claim_interface returned %d\n",r);
+		abort();
+	   }
+           return 1;
+      }
     }
-    return 0;
+  }
+  return 0;
 }
 
 void initSHM()
@@ -184,7 +157,7 @@ void initSHM()
 
 void release()
 {
-    usb_close(udevmidi);
+    usb_close(udev);
     shmdt(shm);
     shmctl(shmid,IPC_RMID,NULL);
 }
@@ -198,11 +171,11 @@ void timediff(struct timeval *res, struct timeval *a, struct timeval *b) {
         sec--;
     }
     if (sec<0) {
-        res->tv_sec=0;
-        res->tv_usec=0;
+	res->tv_sec=0;
+	res->tv_usec=0;
     } else {
-        res->tv_sec=sec;
-        res->tv_usec=usec;
+	res->tv_sec=sec;
+	res->tv_usec=usec;
     }
 }
 
@@ -210,8 +183,8 @@ void timeadd(struct timeval *res, struct timeval *a, struct timeval *b) {
     res->tv_usec=a->tv_usec+b->tv_usec;
     res->tv_sec=a->tv_sec+b->tv_sec;
     while (res->tv_usec >= 1000000) {
-        res->tv_usec-=1000000;
-        res->tv_sec++;
+	res->tv_usec-=1000000;
+	res->tv_sec++;
     }
 }
 
@@ -219,28 +192,28 @@ int main() {
     struct timeval now,next,diff,delay;
 
     if (initUSB()) {
-        initSHM();
+	initSHM();
         delay.tv_sec=0;
         delay.tv_usec=250000;
         gettimeofday(&next,NULL); /* First tick is now */
         while(!*shutdown) {
-            if (*maxchannel<22)
-                *maxchannel=22;
-            sendDMX();
-            timeadd(&next,&next,&delay); /* Wait to next tick */
-            gettimeofday(&now,NULL);
-            timediff(&diff,&next,&now); /* how much to wait */
-            while (diff.tv_sec || diff.tv_usec) {
-                select(0,NULL,NULL,NULL,&diff);
-                gettimeofday(&now,NULL);
-                timediff(&diff,&next,&now);
-            };
-        }
-        memset(channels,0,512*sizeof(int));
-        *maxchannel=512;
-        sendDMX();
-        release();
+	    if (*maxchannel<22)
+	        *maxchannel=22;
+	    sendDMX();
+	    timeadd(&next,&next,&delay); /* Wait to next tick */
+	    gettimeofday(&now,NULL);
+	    timediff(&diff,&next,&now); /* how much to wait */
+	    while (diff.tv_sec || diff.tv_usec) {
+	        select(0,NULL,NULL,NULL,&diff);
+	        gettimeofday(&now,NULL);
+	        timediff(&diff,&next,&now);
+	    };		    
+	}
+	memset(channels,0,512*sizeof(int));
+	*maxchannel=512;
+	sendDMX();
+	release();
     } else {
-        printf("No MIDI device found\n");
+	printf("No DMX device found\n");
     }
 }
