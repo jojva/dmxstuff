@@ -26,6 +26,7 @@ using namespace std::chrono;
 static struct pollfd *pfds;
 static int npfds;
 static BYTE dmx_channels[MAX_CHANNELS];
+static bool dmx_channels_release[MAX_CHANNELS];
 
 void init_aseqdump(int argc, char *argv[])
 {
@@ -101,15 +102,19 @@ void update_channels(k8062_client& dmx)
 {
     static milliseconds ms_last = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
     milliseconds ms_now = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
-    auto diff = duration_cast<milliseconds>(ms_now - ms_last).count();
-    if(diff > 10)
+    auto diff = duration_cast<milliseconds>(ms_now - ms_last);
+    milliseconds update_delay(50);
+    if(diff > update_delay)
     {
         for(int channel = 0; channel < MAX_CHANNELS; channel++)
         {
-            dmx_channels[channel] = std::max(0, dmx_channels[channel] - 10);
-            dmx.set_channel(channel, dmx_channels[channel]);
+            if(dmx_channels_release[channel])
+            {
+                dmx_channels[channel] = std::max(0, dmx_channels[channel] - 10);
+                dmx.set_channel(channel, dmx_channels[channel]);
+            }
         }
-        ms_last += milliseconds(10);
+        ms_last += milliseconds(update_delay);
     }
 }
 
@@ -121,6 +126,7 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
     {
         // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
         int channel = ev->data.note.note % 12;
+        dmx_channels_release[channel] = false;
         if (ev->data.note.velocity)
         {
             printf("Note on                %2d, note %d, velocity %d\n",
@@ -145,7 +151,7 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
                ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
         // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
         int channel = ev->data.note.note % 12;
-        dmx.set_channel(channel, 0);
+        dmx_channels_release[channel] = true;
         break;
     }
     case SND_SEQ_EVENT_KEYPRESS:
@@ -334,6 +340,7 @@ int main(int argc,char *argv[])
     for(int i = 0; i < MAX_CHANNELS; i++)
     {
         dmx_channels[i] = 0;
+        dmx_channels_release[i] = false;
     }
     // Init MIDI interface
     init_aseqdump(argc, argv);
