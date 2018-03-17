@@ -145,7 +145,7 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
         {
             printf("Note off               %2d, note %d\n",
                    ev->data.note.channel, ev->data.note.note);
-            send_dmx(dmx, (BYTE)channel, 254);
+            dmx_channels_release[channel] = true;
         }
         break;
     }
