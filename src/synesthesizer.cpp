@@ -33,6 +33,9 @@ void init_aseqdump(int argc, char *argv[])
 
     init_seq();
 
+    // By default, read port 20
+    parse_ports("20");
+
     while ((c = getopt_long(argc, argv, short_options,
                             long_options, NULL)) != -1) {
         switch (c) {
