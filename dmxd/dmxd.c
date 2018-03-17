@@ -37,13 +37,13 @@ void sendDMX()
 {
     int i, n;
     unsigned char data[8];
-    int m;
+    int max;
 
-    m=*maxchannel;
-    for (i=0;(i<100) && !channels[i] && (i < m - 6);i++);
+    max = *maxchannel;
+    for (i = 0; (i < 100) && !channels[i] && (i < max - 6); i++);
 
     data[0] = 4; /* Start of data, number of leading 0 and 6 channels */
-    data[1] = i+1;
+    data[1] = i + 1;
     data[2] = channels[i];
     data[3] = channels[i+1];
     data[4] = channels[i+2];
@@ -51,13 +51,13 @@ void sendDMX()
     data[6] = channels[i+4];
     data[7] = channels[i+5];
     write_command(data);
-    i+=6;
+    i += 6;
 
-    while (i < m - 7) {
+    while (i < max - 7) {
         if (!channels[i]) {
-            for(n=i+1;(n < m - 6) && (n-i<100) && !channels[n] ;n++) {
+            for(n = i + 1; (n < max - 6) && (n - i < 100) && !channels[n]; n++) {
                 data[0] = 5;
-                data[1] = n-i;
+                data[1] = n - i;
                 data[2] = channels[n];
                 data[3] = channels[n+1];
                 data[4] = channels[n+2];
@@ -65,7 +65,7 @@ void sendDMX()
                 data[6] = channels[n+4];
                 data[7] = channels[n+5];
                 write_command(data);
-                i=n+6;
+                i = n + 6;
             }
         } else {
             data[0] = 2; /* 7 channels */
@@ -77,11 +77,11 @@ void sendDMX()
             data[6] = channels[i+5];
             data[7] = channels[i+6];
             write_command(data);
-            i+=7;
+            i += 7;
         }
     }
 
-    for(;i < m;i++) {
+    for(;i < max; i++) {
         data[0] = 3; /* send one channel */
         data[1] = channels[i];
         write_command(data);
