@@ -110,12 +110,16 @@ void update_channels(k8062_client& dmx)
     milliseconds ms_now = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
     auto diff = duration_cast<milliseconds>(ms_now - ms_last);
     milliseconds update_delay(50);
+    // Every 50 milliseconds...
     if(diff > update_delay)
     {
+        // For each channel...
         for(int channel = 0; channel < MAX_CHANNELS; channel++)
         {
+            // If it's being released (after a Note Off)...
             if(dmx_channels_release[channel])
             {
+                // Decrease the DMX velocity by 10, to a lower bound of 0
                 dmx_channels[channel] = std::max(0, dmx_channels[channel] - 10);
                 send_dmx(dmx, (BYTE)channel, dmx_channels[channel]);
             }
