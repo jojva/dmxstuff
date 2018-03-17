@@ -19,23 +19,23 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "aseqdump.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <signal.h>
 #include <getopt.h>
 #include <sys/poll.h>
 #include <alsa/asoundlib.h>
 
-static snd_seq_t *seq;
-static int port_count;
-static snd_seq_addr_t *ports;
-static volatile sig_atomic_t stop = 0;
-
+snd_seq_t *seq;
+int port_count;
+snd_seq_addr_t *ports;
+volatile sig_atomic_t stop = 0;
 
 /* prints an error message to stderr, and dies */
-static void fatal(const char *msg, ...)
+void fatal(const char *msg, ...)
 {
 	va_list ap;
 
@@ -47,20 +47,20 @@ static void fatal(const char *msg, ...)
 }
 
 /* memory allocation error handling */
-static void check_mem(void *p)
+void check_mem(void *p)
 {
 	if (!p)
 		fatal("Out of memory");
 }
 
 /* error handling for ALSA functions */
-static void check_snd(const char *operation, int err)
+void check_snd(const char *operation, int err)
 {
 	if (err < 0)
 		fatal("Cannot %s - %s", operation, snd_strerror(err));
 }
 
-static void init_seq(void)
+void init_seq(void)
 {
 	int err;
 
@@ -74,7 +74,7 @@ static void init_seq(void)
 }
 
 /* parses one or more port addresses from the string */
-static void parse_ports(const char *arg)
+void parse_ports(const char *arg)
 {
 	char *buf, *s, *port_name;
 	int err;
@@ -102,7 +102,7 @@ static void parse_ports(const char *arg)
 	free(buf);
 }
 
-static void create_port(void)
+void create_port(void)
 {
 	int err;
 
@@ -114,7 +114,7 @@ static void create_port(void)
 	check_snd("create port", err);
 }
 
-static void connect_ports(void)
+void connect_ports(void)
 {
 	int i, err;
 
@@ -126,7 +126,7 @@ static void connect_ports(void)
 	}
 }
 
-static void dump_event(const snd_seq_event_t *ev)
+void dump_event(const snd_seq_event_t *ev)
 {
 	printf("%3d:%-3d ", ev->source.client, ev->source.port);
 	switch (ev->type) {
@@ -295,7 +295,7 @@ static void dump_event(const snd_seq_event_t *ev)
 	}
 }
 
-static void list_ports(void)
+void list_ports(void)
 {
 	snd_seq_client_info_t *cinfo;
 	snd_seq_port_info_t *pinfo;
@@ -326,7 +326,7 @@ static void list_ports(void)
 	}
 }
 
-static void help(const char *argv0)
+void help(const char *argv0)
 {
 	printf("Usage: %s [options]\n"
 		"\nAvailable options:\n"
@@ -336,91 +336,7 @@ static void help(const char *argv0)
 		argv0);
 }
 
-static void sighandler(int sig)
+void sighandler(int sig)
 {
 	stop = 1;
-}
-
-int main(int argc, char *argv[])
-{
-	static const char short_options[] = "hVlp:";
-	static const struct option long_options[] = {
-		{"help", 0, NULL, 'h'},
-		{"list", 0, NULL, 'l'},
-		{"port", 1, NULL, 'p'},
-		{ }
-	};
-
-	int do_list = 0;
-	struct pollfd *pfds;
-	int npfds;
-	int c, err;
-
-	init_seq();
-
-	while ((c = getopt_long(argc, argv, short_options,
-				long_options, NULL)) != -1) {
-		switch (c) {
-		case 'h':
-			help(argv[0]);
-			return 0;
-		case 'l':
-			do_list = 1;
-			break;
-		case 'p':
-			parse_ports(optarg);
-			break;
-		default:
-			help(argv[0]);
-			return 1;
-		}
-	}
-	if (optind < argc) {
-		help(argv[0]);
-		return 1;
-	}
-
-	if (do_list) {
-		list_ports();
-		return 0;
-	}
-
-	create_port();
-	connect_ports();
-
-	err = snd_seq_nonblock(seq, 1);
-	check_snd("set nonblock mode", err);
-	
-	if (port_count > 0)
-		printf("Waiting for data.");
-	else
-		printf("Waiting for data at port %d:0.",
-		       snd_seq_client_id(seq));
-	printf(" Press Ctrl+C to end.\n");
-	printf("Source  Event                  Ch  Data\n");
-	
-	signal(SIGINT, sighandler);
-	signal(SIGTERM, sighandler);
-
-	npfds = snd_seq_poll_descriptors_count(seq, POLLIN);
-	pfds = alloca(sizeof(*pfds) * npfds);
-	for (;;) {
-		snd_seq_poll_descriptors(seq, pfds, npfds, POLLIN);
-		if (poll(pfds, npfds, -1) < 0)
-			break;
-		do {
-			snd_seq_event_t *event;
-			err = snd_seq_event_input(seq, &event);
-			if (err < 0)
-				break;
-			if (event)
-				dump_event(event);
-		} while (err > 0);
-		fflush(stdout);
-		if (stop)
-			break;
-	}
-
-	snd_seq_close(seq);
-	return 0;
 }
