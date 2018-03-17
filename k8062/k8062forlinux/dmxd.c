@@ -145,7 +145,7 @@ int initUSB()
                 r=usb_claim_interface(udevmidi, 0);
                 printf("Ou ça ?\n");
                 if(r<0){
-                    printf("Error: usb_claim_interface returned %d\n",r);
+                    printf("Error: usb_claim_interface returned %s\n", usb_strerror());
                     abort();
                 }
                 while(1)
