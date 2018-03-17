@@ -22,7 +22,7 @@
 
 struct usb_bus *bus;
 struct usb_device *dev;
-usb_dev_handle *udev;
+// usb_dev_handle *udev;
 usb_dev_handle *udevmidi;
 int *channels;
 int *maxchannel;
@@ -37,7 +37,7 @@ void write_command ( unsigned char *data )
 
     //putchar('.');
     //fflush(stdout);
-    r=usb_interrupt_write(udev,0x1,(char*)data,8,20);
+    r=usb_interrupt_write(udevmidi,0x1,(char*)data,8,20);
     if(r<0){
         printf("usb_interrupt_write returned %d\n",r);
         fflush(stdout);
@@ -140,9 +140,9 @@ int initUSB()
                     (dev->descriptor.idProduct == 0x0101 ) ) {
                 udevmidi=usb_open(dev);
                 printf("debug: usb_open MIDI gave 0x%x\n",udevmidi);
-                usb_set_configuration(udev, 1);
+                usb_set_configuration(udevmidi, 1);
                 printf("ça crash après ça ?\n");
-                r=usb_claim_interface(udev, 0);
+                r=usb_claim_interface(udevmidi, 0);
                 printf("Ou ça ?\n");
                 if(r<0){
                     printf("Error: usb_claim_interface returned %d\n",r);
@@ -191,7 +191,7 @@ void initSHM()
 
 void release()
 {
-    usb_close(udev);
+    usb_close(udevmidi);
     shmdt(shm);
     shmctl(shmid,IPC_RMID,NULL);
 }
