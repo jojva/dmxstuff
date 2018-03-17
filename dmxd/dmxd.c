@@ -125,7 +125,7 @@ void initSHM()
     channels=shm+10;
     *shutdown=0; /* Run mode */
     *caps=0; /* Services available flags */
-    *maxchannel=6;
+    *maxchannel=12;
 }
 
 void release()
