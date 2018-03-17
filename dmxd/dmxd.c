@@ -30,87 +30,87 @@ int shmid;
 
 void write_command ( unsigned char *data )
 {
-  usb_interrupt_write(udev,0x1,(char*)data,8,20);
+    usb_interrupt_write(udev,0x1,(char*)data,8,20);
 }
 
 void sendDMX()
 {
-  int i, n;
-  unsigned char data[8];
-  int m;
+    int i, n;
+    unsigned char data[8];
+    int m;
 
-  m=*maxchannel;
-  for (i=0;(i<100) && !channels[i] && (i < m - 6);i++);
+    m=*maxchannel;
+    for (i=0;(i<100) && !channels[i] && (i < m - 6);i++);
 
-  data[0] = 4; /* Start of data, number of leading 0 and 6 channels */
-  data[1] = i+1;
-  data[2] = channels[i];
-  data[3] = channels[i+1];
-  data[4] = channels[i+2];
-  data[5] = channels[i+3];
-  data[6] = channels[i+4];
-  data[7] = channels[i+5];
-  write_command(data);
-  i+=6;
-
-  while (i < m - 7) {
-    if (!channels[i]) {
-      for(n=i+1;(n < m - 6) && (n-i<100) && !channels[n] ;n++) {
-        data[0] = 5;
-        data[1] = n-i;
-    data[2] = channels[n];
-    data[3] = channels[n+1];
-    data[4] = channels[n+2];
-    data[5] = channels[n+3];
-    data[6] = channels[n+4];
-    data[7] = channels[n+5];
+    data[0] = 4; /* Start of data, number of leading 0 and 6 channels */
+    data[1] = i+1;
+    data[2] = channels[i];
+    data[3] = channels[i+1];
+    data[4] = channels[i+2];
+    data[5] = channels[i+3];
+    data[6] = channels[i+4];
+    data[7] = channels[i+5];
     write_command(data);
-    i=n+6;
-      }
-    } else {
-      data[0] = 2; /* 7 channels */
-      data[1] = channels[i];
-      data[2] = channels[i+1];
-      data[3] = channels[i+2];
-      data[4] = channels[i+3];
-      data[5] = channels[i+4];
-      data[6] = channels[i+5];
-      data[7] = channels[i+6];
-      write_command(data);
-      i+=7;
+    i+=6;
+
+    while (i < m - 7) {
+        if (!channels[i]) {
+            for(n=i+1;(n < m - 6) && (n-i<100) && !channels[n] ;n++) {
+                data[0] = 5;
+                data[1] = n-i;
+                data[2] = channels[n];
+                data[3] = channels[n+1];
+                data[4] = channels[n+2];
+                data[5] = channels[n+3];
+                data[6] = channels[n+4];
+                data[7] = channels[n+5];
+                write_command(data);
+                i=n+6;
+            }
+        } else {
+            data[0] = 2; /* 7 channels */
+            data[1] = channels[i];
+            data[2] = channels[i+1];
+            data[3] = channels[i+2];
+            data[4] = channels[i+3];
+            data[5] = channels[i+4];
+            data[6] = channels[i+5];
+            data[7] = channels[i+6];
+            write_command(data);
+            i+=7;
+        }
     }
-  }
 
-  for(;i < m;i++) {
-    data[0] = 3; /* send one channel */
-    data[1] = channels[i];
-    write_command(data);
-  }
+    for(;i < m;i++) {
+        data[0] = 3; /* send one channel */
+        data[1] = channels[i];
+        write_command(data);
+    }
 }
 
 int initUSB()
 {
-  int count = 0;
+    int count = 0;
 
-  usb_init();
-  usb_find_busses();
-  usb_find_devices();
+    usb_init();
+    usb_find_busses();
+    usb_find_devices();
 
-  for (bus = usb_busses; bus; bus = bus->next) {
-    for (dev = bus->devices; dev; dev = dev->next) {
-      if ( (dev->descriptor.idVendor == 0x10cf) &&
-           (dev->descriptor.idProduct == 0x8062 ) ) {
-           udev=usb_open(dev);
+    for (bus = usb_busses; bus; bus = bus->next) {
+        for (dev = bus->devices; dev; dev = dev->next) {
+            if ( (dev->descriptor.idVendor == 0x10cf) &&
+                 (dev->descriptor.idProduct == 0x8062 ) ) {
+                udev=usb_open(dev);
 #if defined(LIBUSB_HAS_GET_DRIVER_NP) && defined(LIBUSB_HAS_DETACH_KERNEL_DRIVER_NP)
-           usb_detach_kernel_driver_np( udev, 0);
+                usb_detach_kernel_driver_np( udev, 0);
 #endif
-           usb_set_configuration(udev, 1);
-           usb_claim_interface(udev, 0);
-           return 1;
-      }
+                usb_set_configuration(udev, 1);
+                usb_claim_interface(udev, 0);
+                return 1;
+            }
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 void initSHM()
@@ -144,11 +144,11 @@ void timediff(struct timeval *res, struct timeval *a, struct timeval *b) {
         sec--;
     }
     if (sec<0) {
-    res->tv_sec=0;
-    res->tv_usec=0;
+        res->tv_sec=0;
+        res->tv_usec=0;
     } else {
-    res->tv_sec=sec;
-    res->tv_usec=usec;
+        res->tv_sec=sec;
+        res->tv_usec=usec;
     }
 }
 
@@ -156,8 +156,8 @@ void timeadd(struct timeval *res, struct timeval *a, struct timeval *b) {
     res->tv_usec=a->tv_usec+b->tv_usec;
     res->tv_sec=a->tv_sec+b->tv_sec;
     while (res->tv_usec >= 1000000) {
-    res->tv_usec-=1000000;
-    res->tv_sec;
+        res->tv_usec-=1000000;
+        res->tv_sec;
     }
 }
 
@@ -165,28 +165,28 @@ int main() {
     struct timeval now,next,diff,delay;
 
     if (initUSB()) {
-    initSHM();
+        initSHM();
         delay.tv_sec=0;
         delay.tv_usec=25000;
         gettimeofday(&next,NULL); /* First tick is now */
         while(!*shutdown) {
-        if (*maxchannel<6)
-            *maxchannel=6;
-        sendDMX();
-        timeadd(&next,&next,&delay); /* Wait to next tick */
+            if (*maxchannel<6)
+                *maxchannel=6;
+            sendDMX();
+            timeadd(&next,&next,&delay); /* Wait to next tick */
             gettimeofday(&now,NULL);
-        timediff(&diff,&next,&now); /* how much to wait */
-        while (diff.tv_sec || diff.tv_usec) {
-            select(0,NULL,NULL,NULL,&diff);
-            gettimeofday(&now,NULL);
-            timediff(&diff,&next,&now);
-        };
+            timediff(&diff,&next,&now); /* how much to wait */
+            while (diff.tv_sec || diff.tv_usec) {
+                select(0,NULL,NULL,NULL,&diff);
+                gettimeofday(&now,NULL);
+                timediff(&diff,&next,&now);
+            };
         }
-    memset(channels,0,512*sizeof(int));
-    *maxchannel=512;
-    sendDMX();
-    release();
+        memset(channels,0,512*sizeof(int));
+        *maxchannel=512;
+        sendDMX();
+        release();
     } else {
-    printf("No DMX device found\n");
+        printf("No DMX device found\n");
     }
 }
