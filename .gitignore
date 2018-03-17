@@ -1,0 +1,18 @@
+# Binaries
+dmxd/dmxd
+dmxd/dmxdummy
+dmxd/dmxtest
+src/blackout
+src/sinewaves
+src/synesthesizer
+src/whiteout
+
+# Build objects
+*.o
+
+# QtCreator files
+dmxstuff.config
+dmxstuff.creator
+dmxstuff.creator.user
+dmxstuff.files
+dmxstuff.includes
