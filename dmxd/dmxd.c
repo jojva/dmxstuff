@@ -40,7 +40,7 @@ int r;
   if(r<0){
 	printf("usb_interrupt_write returned %d\n",r);
 	fflush(stdout);
-	abort();
+//	abort();
   }
 }
 
