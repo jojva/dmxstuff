@@ -142,7 +142,8 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-            dmx_channels[channel] = (BYTE)(ev->data.note.velocity * 2);
+//            dmx_channels[channel] = (BYTE)(ev->data.note.velocity * 2);
+            dmx_channels[channel] = (BYTE)254;
             send_dmx(dmx, (BYTE)channel, dmx_channels[channel]);
         }
         else
