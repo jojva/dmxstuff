@@ -19,8 +19,6 @@ using namespace std::chrono;
 #define DELAY_SUSTAIN_RELEASE   80
 
 CSynesthesizer::CSynesthesizer(void) :
-    m_window(NULL),
-    m_screenSurface(NULL),
     m_dmx(),
     m_pfds(NULL),
     m_npfds(0)
@@ -34,14 +32,13 @@ CSynesthesizer::CSynesthesizer(void) :
 
 CSynesthesizer::~CSynesthesizer(void)
 {
-    CloseASeqDump();
+    ExitASeqDump();
 }
 
 void CSynesthesizer::Init(int argc, char *argv[])
 {
     InitDMX();
     InitASeqDump(argc, argv);
-    InitSDL();
 }
 
 void CSynesthesizer::InitDMX(void)
@@ -117,31 +114,7 @@ void CSynesthesizer::InitASeqDump(int argc, char *argv[])
     m_pfds = (struct pollfd *)alloca(sizeof(*m_pfds) * m_npfds);
 }
 
-void CSynesthesizer::InitSDL(void)
-{
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-      fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
-      exit(1);
-    }
-    m_window = SDL_CreateWindow(
-                  "hello_sdl2",
-                  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                  640, 480,
-                  SDL_WINDOW_SHOWN
-    );
-    if (NULL == m_window) {
-      fprintf(stderr, "could not create window: %s\n", SDL_GetError());
-      exit(1);
-    }
-    m_screenSurface = SDL_GetWindowSurface(m_window);
-    SDL_FillRect(m_screenSurface, NULL, SDL_MapRGB(m_screenSurface->format, 0xAB, 0xAB, 0x22));
-    SDL_UpdateWindowSurface(m_window);
-    SDL_Delay(2000);
-    SDL_DestroyWindow(m_window);
-    SDL_Quit();
-}
-
-void CSynesthesizer::CloseASeqDump(void)
+void CSynesthesizer::ExitASeqDump(void)
 {
     snd_seq_close(seq);
 }
@@ -155,12 +128,12 @@ void CSynesthesizer::Run(void)
         int err;
         do {
             UpdateChannels();
-            snd_seq_event_t *event;
-            err = snd_seq_event_input(seq, &event);
+            snd_seq_event_t *snd_seq_event;
+            err = snd_seq_event_input(seq, &snd_seq_event);
             if (err < 0)
                 break;
-            if (event)
-                HandleEvent(event);
+            if (snd_seq_event)
+                HandleMidiEvent(snd_seq_event);
         } while (err > 0);
         fflush(stdout);
         if (stop)
@@ -192,7 +165,7 @@ void CSynesthesizer::UpdateChannels(void)
     }
 }
 
-void CSynesthesizer::HandleEvent(const snd_seq_event_t *ev)
+void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
 {
     printf("%3d:%-3d ", ev->source.client, ev->source.port);
     switch (ev->type) {
