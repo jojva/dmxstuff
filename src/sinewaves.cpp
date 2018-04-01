@@ -5,7 +5,7 @@
 
 #include "k8062.h"
 
-int main(int argc,char *argv[])
+int main(void)
 {
 int max_channels=16;
 int channel_offset=500;	/*the amount more, or less, that adjacent channels lag on the cycle*/
@@ -27,7 +27,6 @@ if(!dmx.is_connected()){
 long n=0;
 double v,a;
 int output;
-BYTE chan_val;
 int cur_channel;
 
 while(1){
@@ -43,7 +42,7 @@ while(1){
 			output=-output;
 		}
 		if(cur_channel==monitor_channel){
-			printf("%d - %f: %f (%d)\n",n,v,a,output);
+            printf("%ld - %f: %f (%d)\n",n,v,a,output);
 		}
 
 		dmx.set_channel((BYTE)cur_channel,(BYTE)output);

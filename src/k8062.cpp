@@ -17,7 +17,7 @@ bool k8062_client::connect()
     shmid=shmget(0x56444D58,sizeof(int)*522, 0666);
     shm=(int *)shmat(shmid,NULL,0);
 
-    printf("k8062 startup: shmid=0x%x (%d) shm=0x%x (%d)\n",(unsigned int)shmid,shmid,shm,shm);
+    printf("k8062 startup: shmid=%d shm=0x%p (%d)\n", shmid, shm, *shm);
     if(shm!=(int*)-1){
  	connected=true;
         dmx_maxchannels=shm;
@@ -46,22 +46,14 @@ bool k8062_client::is_connected()
     return connected;
 }
 
-bool k8062_client::set_channel(BYTE ch,BYTE n)
+void k8062_client::set_channel(BYTE ch, BYTE n)
 {
-    if(ch>=0 && ch <=254 && n>=0 && n<=254){
-	dmx_channels[ch]=n;
-	return true;
-    } else {
-        return false;
-    }
+    dmx_channels[ch] = n;
 }
 
 BYTE k8062_client::peek_channel(BYTE ch)
 {
-if(ch>=0 && ch <=254){
 	return dmx_channels[ch];
-}
-return 0;
 }
 
 

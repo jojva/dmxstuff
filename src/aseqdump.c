@@ -338,5 +338,5 @@ void help(const char *argv0)
 
 void sighandler(int sig)
 {
-	stop = 1;
+    stop = 1;
 }

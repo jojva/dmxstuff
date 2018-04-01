@@ -9,7 +9,7 @@ class k8062_client {
 
 		bool connect();
 		void shutdown();
-		bool set_channel(BYTE ch,BYTE n);
+        void set_channel(BYTE ch,BYTE n);
 		//note: peek_channel only gives the value that the DMX daemon
 		//is outputting, not necessarily the physical channel value
 		BYTE peek_channel(BYTE ch);

@@ -3,7 +3,7 @@
 
 #include "k8062.h"
 
-int main(int argc,char *argv[])
+int main(void)
 {
 int max_channels=16;
 
