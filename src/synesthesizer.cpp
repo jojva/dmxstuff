@@ -5,8 +5,6 @@ extern "C"
 #include "aseqdump.h"
 }
 
-#include <SDL2/SDL.h>
-
 #include <algorithm>
 #include <chrono>
 #include <stdio.h>
@@ -21,6 +19,8 @@ using namespace std::chrono;
 #define DELAY_SUSTAIN_RELEASE   80
 
 CSynesthesizer::CSynesthesizer(void) :
+    m_window(NULL),
+    m_screenSurface(NULL),
     m_dmx(),
     m_pfds(NULL),
     m_npfds(0)
@@ -41,6 +41,7 @@ void CSynesthesizer::Init(int argc, char *argv[])
 {
     InitDMX();
     InitASeqDump(argc, argv);
+    InitSDL();
 }
 
 void CSynesthesizer::InitDMX(void)
@@ -114,6 +115,30 @@ void CSynesthesizer::InitASeqDump(int argc, char *argv[])
 
     m_npfds = snd_seq_poll_descriptors_count(seq, POLLIN);
     m_pfds = (struct pollfd *)alloca(sizeof(*m_pfds) * m_npfds);
+}
+
+void CSynesthesizer::InitSDL(void)
+{
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+      fprintf(stderr, "could not initialize sdl2: %s\n", SDL_GetError());
+      exit(1);
+    }
+    m_window = SDL_CreateWindow(
+                  "hello_sdl2",
+                  SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                  640, 480,
+                  SDL_WINDOW_SHOWN
+    );
+    if (NULL == m_window) {
+      fprintf(stderr, "could not create window: %s\n", SDL_GetError());
+      exit(1);
+    }
+    m_screenSurface = SDL_GetWindowSurface(m_window);
+    SDL_FillRect(m_screenSurface, NULL, SDL_MapRGB(m_screenSurface->format, 0xAB, 0xAB, 0x22));
+    SDL_UpdateWindowSurface(m_window);
+    SDL_Delay(2000);
+    SDL_DestroyWindow(m_window);
+    SDL_Quit();
 }
 
 void CSynesthesizer::CloseASeqDump(void)

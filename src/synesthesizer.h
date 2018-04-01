@@ -1,6 +1,7 @@
 #include "k8062.h"
 
 #include <alsa/asoundlib.h>
+#include <SDL2/SDL.h>
 
 #define MAX_CHANNELS    12
 
@@ -16,6 +17,7 @@ public:
 private:
     void InitDMX(void);
     void InitASeqDump(int argc, char *argv[]);
+    void InitSDL(void);
     void CloseASeqDump(void);
 
     void UpdateChannels(void);
@@ -23,6 +25,8 @@ private:
     void SendDmx(BYTE channel);
 
 private:
+    SDL_Window*     m_window;
+    SDL_Surface*    m_screenSurface;
     k8062_client    m_dmx;
     struct pollfd*  m_pfds;
     int             m_npfds;
