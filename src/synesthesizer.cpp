@@ -1,12 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "k8062.h"
+#include "synesthesizer.h"
 
 extern "C"
 {
 #include "aseqdump.h"
 }
+
+#include <SDL2/SDL.h>
 
 #include <algorithm>
 #include <chrono>
@@ -16,19 +15,43 @@ extern "C"
 #include <string.h>
 #include <getopt.h>
 #include <sys/poll.h>
-#include <alsa/asoundlib.h>
 
 using namespace std::chrono;
 
-#define MAX_CHANNELS            12
 #define DELAY_SUSTAIN_RELEASE   80
 
-static struct pollfd *pfds;
-static int npfds;
-static BYTE dmx_channels[MAX_CHANNELS];
-static bool dmx_channels_release[MAX_CHANNELS];
+CSynesthesizer::CSynesthesizer(void) :
+    m_dmx(),
+    m_pfds(NULL),
+    m_npfds(0)
+{
+    for(int i = 0; i < MAX_CHANNELS; i++)
+    {
+        m_velocity[i] = 0;
+        m_release[i] = false;
+    }
+}
 
-void init_aseqdump(int argc, char *argv[])
+CSynesthesizer::~CSynesthesizer(void)
+{
+    CloseASeqDump();
+}
+
+void CSynesthesizer::Init(int argc, char *argv[])
+{
+    InitDMX();
+    InitASeqDump(argc, argv);
+}
+
+void CSynesthesizer::InitDMX(void)
+{
+    if(!m_dmx.is_connected()){
+        puts("Error: Unable to connect to dmx daemon.\n");
+        exit(1);
+    }
+}
+
+void CSynesthesizer::InitASeqDump(int argc, char *argv[])
 {
     static const char short_options[] = "hVlp:";
     static const struct option long_options[] = {
@@ -89,22 +112,38 @@ void init_aseqdump(int argc, char *argv[])
     signal(SIGINT, sighandler);
     signal(SIGTERM, sighandler);
 
-    npfds = snd_seq_poll_descriptors_count(seq, POLLIN);
-    pfds = (struct pollfd *)alloca(sizeof(*pfds) * npfds);
+    m_npfds = snd_seq_poll_descriptors_count(seq, POLLIN);
+    m_pfds = (struct pollfd *)alloca(sizeof(*m_pfds) * m_npfds);
 }
 
-void close_aseqdump(void)
+void CSynesthesizer::CloseASeqDump(void)
 {
     snd_seq_close(seq);
 }
 
-void send_dmx(k8062_client& dmx, BYTE channel, BYTE velocity)
+void CSynesthesizer::Run(void)
 {
-    printf("Sending velocity %d to channel %d\n", velocity, channel);
-    dmx.set_channel(channel, velocity);
+    for (;;) {
+        snd_seq_poll_descriptors(seq, m_pfds, m_npfds, POLLIN);
+        if (poll(m_pfds, m_npfds, -1) < 0)
+            break;
+        int err;
+        do {
+            UpdateChannels();
+            snd_seq_event_t *event;
+            err = snd_seq_event_input(seq, &event);
+            if (err < 0)
+                break;
+            if (event)
+                HandleEvent(event);
+        } while (err > 0);
+        fflush(stdout);
+        if (stop)
+            break;
+    }
 }
 
-void update_channels(k8062_client& dmx)
+void CSynesthesizer::UpdateChannels(void)
 {
     static milliseconds ms_last = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
     milliseconds ms_now = duration_cast< milliseconds >(system_clock::now().time_since_epoch());
@@ -117,18 +156,18 @@ void update_channels(k8062_client& dmx)
         for(int channel = 0; channel < MAX_CHANNELS; channel++)
         {
             // If it's being released (after a Note Off)...
-            if(dmx_channels_release[channel])
+            if(m_release[channel])
             {
                 // Decrease the DMX velocity by 10, to a lower bound of 0
-                dmx_channels[channel] = std::max(0, dmx_channels[channel] - 10);
-                send_dmx(dmx, (BYTE)channel, dmx_channels[channel]);
+                m_velocity[channel] = std::max(0, m_velocity[channel] - 10);
+                SendDmx((BYTE)channel);
             }
         }
         ms_last += milliseconds(update_delay);
     }
 }
 
-void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
+void CSynesthesizer::HandleEvent(const snd_seq_event_t *ev)
 {
     printf("%3d:%-3d ", ev->source.client, ev->source.port);
     switch (ev->type) {
@@ -136,21 +175,21 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
     {
         // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
         int channel = ev->data.note.note % 12;
-        dmx_channels_release[channel] = false;
+        m_release[channel] = false;
         if (ev->data.note.velocity)
         {
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-//            dmx_channels[channel] = (BYTE)(ev->data.note.velocity * 2);
-            dmx_channels[channel] = (BYTE)254;
-            send_dmx(dmx, (BYTE)channel, dmx_channels[channel]);
+//            m_velocity[channel] = (BYTE)(ev->data.note.velocity * 2);
+            m_velocity[channel] = (BYTE)254;
+            SendDmx((BYTE)channel);
         }
         else
         {
             printf("Note off               %2d, note %d\n",
                    ev->data.note.channel, ev->data.note.note);
-            dmx_channels_release[channel] = true;
+            m_release[channel] = true;
         }
         break;
     }
@@ -160,7 +199,7 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
                ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
         // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
         int channel = ev->data.note.note % 12;
-        dmx_channels_release[channel] = true;
+        m_release[channel] = true;
         break;
     }
     case SND_SEQ_EVENT_KEYPRESS:
@@ -316,46 +355,8 @@ void handle_event(const snd_seq_event_t *ev, k8062_client& dmx)
     }
 }
 
-void run(k8062_client& dmx)
+void CSynesthesizer::SendDmx(BYTE channel)
 {
-    for (;;) {
-        snd_seq_poll_descriptors(seq, pfds, npfds, POLLIN);
-        if (poll(pfds, npfds, -1) < 0)
-            break;
-        int err;
-        do {
-            update_channels(dmx);
-            snd_seq_event_t *event;
-            err = snd_seq_event_input(seq, &event);
-            if (err < 0)
-                break;
-            if (event)
-                handle_event(event, dmx);
-        } while (err > 0);
-        fflush(stdout);
-        if (stop)
-            break;
-    }
-}
-
-int main(int argc,char *argv[])
-{
-    // Init DMX interface
-    k8062_client dmx;
-    if(!dmx.is_connected()){
-        puts("Error: Unable to connect to dmx daemon.\n");
-        exit(1);
-    }
-    for(int i = 0; i < MAX_CHANNELS; i++)
-    {
-        dmx_channels[i] = 0;
-        dmx_channels_release[i] = false;
-    }
-    // Init MIDI interface
-    init_aseqdump(argc, argv);
-    // Run software
-    run(dmx);
-    // Destroy MIDI interface
-    close_aseqdump();
-    return 0;
+    printf("Sending velocity %d to channel %d\n", m_velocity[channel], channel);
+    m_dmx.set_channel(channel, m_velocity[channel]);
 }
