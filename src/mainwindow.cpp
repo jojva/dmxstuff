@@ -51,6 +51,11 @@ void MainWindow::buildGui()
     sustainSpinbox->setRange(0, 100);
     releaseSpinbox->setRange(0, 100000);
 
+    attackSpinbox->setValue(50);
+    decaySpinbox->setValue(200);
+    sustainSpinbox->setValue(50);
+    releaseSpinbox->setValue(1000);
+
     QFormLayout *adsrFormLayout = new QFormLayout;
     adsrFormLayout->addRow(tr("Attack time (ms) "), attackSpinbox);
     adsrFormLayout->addRow(tr("Decay time (ms) "), decaySpinbox);
