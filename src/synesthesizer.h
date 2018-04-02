@@ -1,3 +1,5 @@
+#pragma once
+
 #include "k8062.h"
 
 #include <alsa/asoundlib.h>

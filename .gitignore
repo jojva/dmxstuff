@@ -10,6 +10,11 @@ src/whiteout
 # Build objects
 *.o
 
+# Qt build files
+src/moc_*
+src/.qmake.stash
+src/Makefile
+
 # QtCreator files
 dmxstuff.config
 dmxstuff.creator

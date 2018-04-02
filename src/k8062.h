@@ -1,3 +1,5 @@
+#pragma once
+
 typedef unsigned char BYTE;
 
 class k8062_client {
