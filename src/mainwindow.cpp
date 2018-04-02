@@ -11,6 +11,7 @@ MainWindow::MainWindow(CSynesthesizer &synesthesizer)
     , releaseSpinbox(new QSpinBox)
 {
     buildGui();
+    setupSignals();
     readSettings();
 
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -67,6 +68,19 @@ void MainWindow::buildGui()
     widget->setLayout(layout);
     setCentralWidget(widget);
     show();
+}
+
+void MainWindow::setupSignals()
+{
+    connect(attackSpinbox, SIGNAL(valueChanged(int)), this, SLOT(adsrChanged()));
+    connect(decaySpinbox, SIGNAL(valueChanged(int)), this, SLOT(adsrChanged()));
+    connect(sustainSpinbox, SIGNAL(valueChanged(int)), this, SLOT(adsrChanged()));
+    connect(releaseSpinbox, SIGNAL(valueChanged(int)), this, SLOT(adsrChanged()));
+}
+
+void MainWindow::adsrChanged()
+{
+    synesthesizer.SetADSR(attackSpinbox->value(), decaySpinbox->value(), sustainSpinbox->value(), releaseSpinbox->value());
 }
 
 void MainWindow::update()

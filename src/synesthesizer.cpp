@@ -20,6 +20,7 @@ using namespace std::chrono;
 
 CSynesthesizer::CSynesthesizer(void) :
     m_dmx(),
+    m_adsr(),
     m_pfds(NULL),
     m_npfds(0)
 {
@@ -117,6 +118,14 @@ void CSynesthesizer::InitASeqDump(int argc, char *argv[])
 void CSynesthesizer::ExitASeqDump(void)
 {
     snd_seq_close(seq);
+}
+
+void CSynesthesizer::SetADSR(int attack, int decay, int sustain, int release)
+{
+    m_adsr.attack = attack;
+    m_adsr.decay = decay;
+    m_adsr.sustain = sustain;
+    m_adsr.release = release;
 }
 
 void CSynesthesizer::Run(void)

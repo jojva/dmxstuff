@@ -19,12 +19,14 @@ protected:
     void closeEvent(QCloseEvent *event) override;
 
 private slots:
+    void adsrChanged();
     void update();
 
 private:
     void readSettings();
     void writeSettings();
     void buildGui();
+    void setupSignals();
 
 private:
     CSynesthesizer& synesthesizer;
