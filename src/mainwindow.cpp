@@ -75,8 +75,7 @@ void MainWindow::buildGui()
     series->append(0, 0);
     series->append(attackSpinbox->value(), 100);
     series->append(attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
-    series->append(attackSpinbox->value() + decaySpinbox->value() + 500, sustainSpinbox->value());
-    series->append(attackSpinbox->value() + decaySpinbox->value() + 500 + releaseSpinbox->value(), 0);
+    series->append(attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
 
     chart->legend()->hide();
     chart->addSeries(series);
@@ -102,8 +101,7 @@ void MainWindow::updateADSRview()
 {
     series->replace(1, attackSpinbox->value(), 100);
     series->replace(2, attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
-    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + 500, sustainSpinbox->value());
-    series->replace(4, attackSpinbox->value() + decaySpinbox->value() + 500 + releaseSpinbox->value(), 0);
+    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
     chart->createDefaultAxes();
 }
 
