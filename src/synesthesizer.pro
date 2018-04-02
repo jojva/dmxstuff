@@ -1,4 +1,4 @@
-QT += widgets
+QT += widgets charts
 
 HEADERS       = aseqdump.h \
                 channel.h \

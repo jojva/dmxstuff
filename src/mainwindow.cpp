@@ -1,6 +1,9 @@
-#include <QtWidgets>
-
 #include "mainwindow.h"
+
+#include <QtWidgets>
+#include <QtCharts/QChart>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
 
 MainWindow::MainWindow(CSynesthesizer &synesthesizer)
     : synesthesizer(synesthesizer)
@@ -9,6 +12,8 @@ MainWindow::MainWindow(CSynesthesizer &synesthesizer)
     , decaySpinbox(new QSpinBox)
     , sustainSpinbox(new QSpinBox)
     , releaseSpinbox(new QSpinBox)
+    , series(new QtCharts::QLineSeries)
+    , chart(new QtCharts::QChart)
 {
     buildGui();
     setupSignals();
@@ -46,6 +51,7 @@ void MainWindow::writeSettings()
 
 void MainWindow::buildGui()
 {
+    // ADSR configuration part
     attackSpinbox->setRange(0, 100000);
     decaySpinbox->setRange(0, 100000);
     sustainSpinbox->setRange(0, 100);
@@ -65,14 +71,40 @@ void MainWindow::buildGui()
     QGroupBox *adsrGroupbox = new QGroupBox(tr("ADSR configuration"));
     adsrGroupbox->setLayout(adsrFormLayout);
 
-    QHBoxLayout *layout = new QHBoxLayout;
-    layout->setAlignment(Qt::AlignVCenter);
+    // ADSR view part
+    series->append(0, 0);
+    series->append(attackSpinbox->value(), 100);
+    series->append(attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
+    series->append(attackSpinbox->value() + decaySpinbox->value() + 500, sustainSpinbox->value());
+    series->append(attackSpinbox->value() + decaySpinbox->value() + 500 + releaseSpinbox->value(), 0);
+
+    chart->legend()->hide();
+    chart->addSeries(series);
+    chart->createDefaultAxes();
+    chart->setTitle("ADSR view");
+
+    QtCharts::QChartView *chartView = new QtCharts::QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    // Top-level widgets
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->setAlignment(Qt::AlignHCenter);
     layout->addWidget(adsrGroupbox);
+    layout->addWidget(chartView);
 
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
     setCentralWidget(widget);
     show();
+}
+
+void MainWindow::updateADSRview()
+{
+    series->replace(1, attackSpinbox->value(), 100);
+    series->replace(2, attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
+    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + 500, sustainSpinbox->value());
+    series->replace(4, attackSpinbox->value() + decaySpinbox->value() + 500 + releaseSpinbox->value(), 0);
+    chart->createDefaultAxes();
 }
 
 void MainWindow::setupSignals()
@@ -85,6 +117,7 @@ void MainWindow::setupSignals()
 
 void MainWindow::adsrChanged()
 {
+    updateADSRview();
     synesthesizer.SetADSR(attackSpinbox->value(), decaySpinbox->value(), sustainSpinbox->value(), releaseSpinbox->value());
 }
 

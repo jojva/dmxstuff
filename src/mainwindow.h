@@ -5,6 +5,11 @@
 #include "synesthesizer.h"
 
 QT_BEGIN_NAMESPACE
+namespace QtCharts
+{
+class QChart;
+class QLineSeries;
+}
 class QSpinBox;
 QT_END_NAMESPACE
 
@@ -26,6 +31,7 @@ private:
     void readSettings();
     void writeSettings();
     void buildGui();
+    void updateADSRview();
     void setupSignals();
 
 private:
@@ -36,4 +42,6 @@ private:
     QSpinBox* decaySpinbox;
     QSpinBox* sustainSpinbox;
     QSpinBox* releaseSpinbox;
+    QtCharts::QLineSeries *series;
+    QtCharts::QChart *chart;
 };
