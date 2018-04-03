@@ -7,6 +7,9 @@ src/sinewaves
 src/synesthesizer
 src/whiteout
 
+# Configuration files
+src/adsr.txt
+
 # Build objects
 *.o
 

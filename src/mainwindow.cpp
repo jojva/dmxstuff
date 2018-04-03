@@ -5,6 +5,10 @@
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 
+#include <fstream>
+
+#define FILE_CONFIG_NAME "adsr.txt"
+
 MainWindow::MainWindow(CSynesthesizer &synesthesizer)
     : synesthesizer(synesthesizer)
     , timer(new QTimer(this))
@@ -41,12 +45,37 @@ void MainWindow::readSettings()
     } else {
         restoreGeometry(geometry);
     }
+    std::ifstream adsrfile(FILE_CONFIG_NAME);
+    if(adsrfile.is_open())
+    {
+        int value;
+        adsrfile >> value;
+        attackSpinbox->setValue(value);
+        adsrfile >> value;
+        decaySpinbox->setValue(value);
+        adsrfile >> value;
+        sustainSpinbox->setValue(value);
+        adsrfile >> value;
+        releaseSpinbox->setValue(value);
+    }
+    else
+    {
+        attackSpinbox->setValue(50);
+        decaySpinbox->setValue(200);
+        sustainSpinbox->setValue(50);
+        releaseSpinbox->setValue(1000);
+    }
 }
 
 void MainWindow::writeSettings()
 {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("geometry", saveGeometry());
+    std::ofstream adsrfile(FILE_CONFIG_NAME, std::ofstream::trunc);
+    adsrfile << attackSpinbox->value() << " ";
+    adsrfile << decaySpinbox->value() << " ";
+    adsrfile << sustainSpinbox->value() << " ";
+    adsrfile << releaseSpinbox->value();
 }
 
 void MainWindow::buildGui()
@@ -56,11 +85,6 @@ void MainWindow::buildGui()
     decaySpinbox->setRange(0, 100000);
     sustainSpinbox->setRange(0, 100);
     releaseSpinbox->setRange(0, 100000);
-
-    attackSpinbox->setValue(50);
-    decaySpinbox->setValue(200);
-    sustainSpinbox->setValue(50);
-    releaseSpinbox->setValue(1000);
 
     QFormLayout *adsrFormLayout = new QFormLayout;
     adsrFormLayout->addRow(tr("Attack time (ms) "), attackSpinbox);
