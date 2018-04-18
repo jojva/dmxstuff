@@ -11,8 +11,12 @@ CChannel::CChannel(void) :
 
 void CChannel::NoteOn(const SADSR &adsr, int max_velocity)
 {
+    ms rollback_time = ms(0);
     int current_velocity = ComputeVelocity();
-    ms rollback_time = ms((current_velocity * m_adsr.attack) / m_max_velocity);
+    if(current_velocity > 0)
+    {
+        rollback_time = ms((current_velocity * m_adsr.attack) / m_max_velocity);
+    }
     m_trigger_time = duration_cast<ms>(system_clock::now().time_since_epoch() - rollback_time);
     m_max_velocity = max_velocity;
     m_adsr = adsr;
