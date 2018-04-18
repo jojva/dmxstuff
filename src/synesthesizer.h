@@ -7,14 +7,6 @@
 
 #define MAX_CHANNELS    12
 
-struct SADSR
-{
-    ms  attack;
-    ms  decay;
-    int sustain;
-    ms  release;
-};
-
 class CSynesthesizer
 {
 public:
@@ -36,7 +28,7 @@ private:
 
 private:
     k8062_client    m_dmx;
-    SADSR           m_adsr;
+    CChannel::SADSR m_adsr;
     CChannel        m_channels[MAX_CHANNELS];
     struct pollfd*  m_pfds;
     int             m_npfds;
