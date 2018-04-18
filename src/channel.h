@@ -35,6 +35,7 @@ public:
 private:
     SADSR   m_adsr;
     int     m_max_velocity;
+    int     m_fake_max_velocity;
     ms      m_trigger_time;
     EPhase  m_phase;
     int     m_progress_percentage;
