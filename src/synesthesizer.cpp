@@ -166,8 +166,8 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-            m_channels[channel].NoteOn(m_adsr, ev->data.note.velocity * 2);
-//            m_channels[channel].NoteOn(m_adsr, 254);
+//            m_channels[channel].NoteOn(m_adsr, ev->data.note.velocity * 2);
+            m_channels[channel].NoteOn(m_adsr, 254);
         }
         else
         {
