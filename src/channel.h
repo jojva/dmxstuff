@@ -30,12 +30,10 @@ public:
     void NoteOn(const SADSR &adsr, int max_velocity);
     void NoteOff(void);
     int ComputeVelocity(void);
-    void ComputePhase(void);
+    void ComputePhase(EPhase& phase, int& progress_percentage);
 
 private:
     SADSR   m_adsr;
     int     m_max_velocity;
     ms      m_trigger_time;
-    EPhase  m_phase;
-    int     m_progress_percentage;
 };
