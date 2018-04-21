@@ -31,6 +31,6 @@ private:
     int     m_max_velocity;
     ms      m_trigger_time;
     ms      m_gate_time;
-    bool    m_is_note_sustained;
+    bool    m_is_note_on;
     bool    m_is_pedal_sustained;
 };

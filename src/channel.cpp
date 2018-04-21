@@ -8,13 +8,19 @@ CChannel::CChannel(void) :
     m_max_velocity(0),
     m_trigger_time(0),
     m_gate_time(0),
-    m_is_note_sustained(false),
+    m_is_note_on(false),
     m_is_pedal_sustained(false)
 {
 }
 
 void CChannel::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustained)
 {
+    if(m_is_note_on)
+    {
+        // Note is already being played, this means the same note from another octave is being played.
+        // Do nothing in that case
+        return;
+    }
     ms rollback_time = ms(0);
     int current_velocity = ComputeVelocity();
     if(current_velocity > 0)
@@ -26,13 +32,13 @@ void CChannel::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustain
     delete m_adsr;
     m_adsr = new CADSR(adsr.A().count(), adsr.D().count(), adsr.SRelative(), adsr.R().count());
     m_adsr->ApplyMaxVelocity(max_velocity);
-    m_is_note_sustained = true;
+    m_is_note_on = true;
     m_is_pedal_sustained = is_pedal_sustained;
 }
 
 void CChannel::NoteOff(void)
 {
-    m_is_note_sustained = false;
+    m_is_note_on = false;
     CheckGateClosed();
 }
 
@@ -44,7 +50,7 @@ void CChannel::ReleaseSustainPedal(void)
 
 void CChannel::CheckGateClosed(void)
 {
-    if(!m_is_note_sustained && !m_is_pedal_sustained)
+    if(!m_is_note_on && !m_is_pedal_sustained)
     {
         m_gate_time = duration_cast<ms>(system_clock::now().time_since_epoch() - m_trigger_time);
     }
@@ -111,7 +117,7 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
             progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->A().count()) / static_cast<double>(m_adsr->D().count());
         }
     }
-    else if(m_is_note_sustained || m_is_pedal_sustained)
+    else if(m_is_note_on || m_is_pedal_sustained)
     {
         phase = SUSTAIN;
         progress_percentage = 0;
