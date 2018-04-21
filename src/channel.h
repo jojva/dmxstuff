@@ -22,7 +22,7 @@ public:
     void NoteOn(CADSR *adsr, int max_velocity);
     void NoteOff(void);
     int ComputeVelocity(void);
-    void ComputePhase(EPhase& phase, int& progress_percentage);
+    void ComputePhase(EPhase& phase, double &progress_percentage);
 
 private:
     CADSR*  m_adsr;

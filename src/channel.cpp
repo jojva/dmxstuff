@@ -36,7 +36,7 @@ int CChannel::ComputeVelocity(void)
         return 0;
     }
     EPhase phase;
-    int progress_percentage;
+    double progress_percentage;
     ComputePhase(phase, progress_percentage);
     switch(phase)
     {
@@ -44,20 +44,20 @@ int CChannel::ComputeVelocity(void)
     case AFTER:
         return 0;
     case ATTACK:
-        return (m_max_velocity * progress_percentage) / 100;
+        return static_cast<int>(m_max_velocity * progress_percentage);
     case DECAY:
-        return m_adsr->S() + (((m_max_velocity - m_adsr->S()) * (100 - progress_percentage)) / 100);
+        return static_cast<int>(m_adsr->S() + ((m_max_velocity - m_adsr->S()) * (1.0 - progress_percentage)));
     case SUSTAIN:
         // TODO
         return 0;
     case RELEASE:
-        return (m_adsr->S() * (100 - progress_percentage)) / 100;
+        return static_cast<int>(m_adsr->S() * (1.0 - progress_percentage));
     default:
         return 0;
     }
 }
 
-void CChannel::ComputePhase(EPhase& phase, int& progress_percentage)
+void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
 {
     ms now = duration_cast<ms>(system_clock::now().time_since_epoch());
     ms delay_from_start = duration_cast<ms>(now - m_trigger_time);
@@ -65,18 +65,18 @@ void CChannel::ComputePhase(EPhase& phase, int& progress_percentage)
     {
         // This should never happen
         phase = BEFORE;
-        progress_percentage = 0;
+        progress_percentage = 0.0;
     }
     else if(delay_from_start < m_adsr->A())
     {
         phase = ATTACK;
         if(m_adsr->A() == ms(0))
         {
-            progress_percentage = 100;
+            progress_percentage = 1.0;
         }
         else
         {
-            progress_percentage = (100 * delay_from_start) / m_adsr->A();
+            progress_percentage = static_cast<double>(delay_from_start.count()) / static_cast<double>(m_adsr->A().count());
         }
     }
     else if(delay_from_start < (m_adsr->AD()))
@@ -84,11 +84,11 @@ void CChannel::ComputePhase(EPhase& phase, int& progress_percentage)
         phase = DECAY;
         if(m_adsr->D() == ms(0))
         {
-            progress_percentage = 100;
+            progress_percentage = 1.0;
         }
         else
         {
-            progress_percentage = (100 * (delay_from_start - m_adsr->A())) / m_adsr->D();
+            progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->A().count()) / static_cast<double>(m_adsr->D().count());
         }
     }
 //    else if(TODO)
@@ -101,16 +101,16 @@ void CChannel::ComputePhase(EPhase& phase, int& progress_percentage)
         phase = RELEASE;
         if(m_adsr->R() == ms(0))
         {
-            progress_percentage = 100;
+            progress_percentage = 1.0;
         }
         else
         {
-            progress_percentage = (100 * (delay_from_start - m_adsr->AD())) / m_adsr->R();
+            progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->AD().count()) / static_cast<double>(m_adsr->R().count());
         }
     }
     else
     {
         phase = AFTER;
-        progress_percentage = 0;
+        progress_percentage = 0.0;
     }
 }
