@@ -24,7 +24,8 @@ CSynesthesizer::CSynesthesizer(const MainWindow &mainwindow) :
     m_mainwindow(mainwindow),
     m_dmx(),
     m_pfds(NULL),
-    m_npfds(0)
+    m_npfds(0),
+    m_sustain_pedal_on(false)
 {
 }
 
@@ -161,7 +162,7 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
 //            m_channels[channel].NoteOn(m_adsr, ev->data.note.velocity * 2);
-            m_channels[channel].NoteOn(m_mainwindow.GetADSR(), 254);
+            m_channels[channel].NoteOn(m_mainwindow.GetADSR(), 254, m_sustain_pedal_on);
         }
         else
         {
@@ -203,6 +204,18 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
     case SND_SEQ_EVENT_CONTROL14:
         printf("Control change         %2d, controller %d, value %5d\n",
                ev->data.control.channel, ev->data.control.param, ev->data.control.value);
+        if(ev->data.control.param == 64)
+        {
+            // Sustain pedal
+            m_sustain_pedal_on = (ev->data.control.value >= 64);
+            if(m_sustain_pedal_on)
+            {
+                for(int channel = 0; channel < MAX_CHANNELS; channel++)
+                {
+                    m_channels[channel].ReleaseSustainPedal();
+                }
+            }
+        }
         break;
     case SND_SEQ_EVENT_NONREGPARAM:
         printf("Non-reg. parameter     %2d, parameter %d, value %d\n",

@@ -33,4 +33,5 @@ private:
     CChannel            m_channels[MAX_CHANNELS];
     struct pollfd*      m_pfds;
     int                 m_npfds;
+    bool                m_sustain_pedal_on;
 };

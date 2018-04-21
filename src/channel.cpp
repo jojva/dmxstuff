@@ -6,11 +6,14 @@ using namespace std::chrono;
 CChannel::CChannel(void) :
     m_adsr(nullptr),
     m_max_velocity(0),
-    m_trigger_time(0)
+    m_trigger_time(0),
+    m_gate_time(0),
+    m_is_note_sustained(false),
+    m_is_pedal_sustained(false)
 {
 }
 
-void CChannel::NoteOn(CADSR* adsr, int max_velocity)
+void CChannel::NoteOn(CADSR* adsr, int max_velocity, bool is_pedal_sustained)
 {
     ms rollback_time = ms(0);
     int current_velocity = ComputeVelocity();
@@ -23,10 +26,28 @@ void CChannel::NoteOn(CADSR* adsr, int max_velocity)
     delete m_adsr;
     m_adsr = adsr;
     adsr->ApplyMaxVelocity(max_velocity);
+    m_is_note_sustained = true;
+    m_is_pedal_sustained = is_pedal_sustained;
 }
 
 void CChannel::NoteOff(void)
 {
+    m_is_note_sustained = false;
+    CheckGateClosed();
+}
+
+void CChannel::ReleaseSustainPedal(void)
+{
+    m_is_pedal_sustained = false;
+    CheckGateClosed();
+}
+
+void CChannel::CheckGateClosed(void)
+{
+    if(!m_is_note_sustained && !m_is_pedal_sustained)
+    {
+        m_gate_time = duration_cast<ms>(system_clock::now().time_since_epoch() - m_trigger_time);
+    }
 }
 
 int CChannel::ComputeVelocity(void)
@@ -48,8 +69,7 @@ int CChannel::ComputeVelocity(void)
     case DECAY:
         return static_cast<int>(m_adsr->S() + ((m_max_velocity - m_adsr->S()) * (1.0 - progress_percentage)));
     case SUSTAIN:
-        // TODO
-        return 0;
+        return m_adsr->S();
     case RELEASE:
         return static_cast<int>(m_adsr->S() * (1.0 - progress_percentage));
     default:
@@ -91,12 +111,12 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
             progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->A().count()) / static_cast<double>(m_adsr->D().count());
         }
     }
-//    else if(TODO)
-//    {
-//        m_phase = SUSTAIN;
-//        m_progress_percentage = 0;
-//    }
-    else if(delay_from_start < m_adsr->ADR())
+    else if(m_is_note_sustained || m_is_pedal_sustained)
+    {
+        phase = SUSTAIN;
+        progress_percentage = 0;
+    }
+    else if(delay_from_start < (m_gate_time + m_adsr->R()))
     {
         phase = RELEASE;
         if(m_adsr->R() == ms(0))
@@ -105,7 +125,7 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
         }
         else
         {
-            progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->AD().count()) / static_cast<double>(m_adsr->R().count());
+            progress_percentage = static_cast<double>(delay_from_start.count() - m_gate_time.count()) / static_cast<double>(m_adsr->R().count());
         }
     }
     else
