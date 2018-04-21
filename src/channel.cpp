@@ -3,7 +3,6 @@
 
 using namespace std::chrono;
 
-#include <algorithm>
 
 CChannel::CChannel(void) :
     m_adsr(nullptr),
@@ -125,7 +124,7 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
         phase = SUSTAIN;
         progress_percentage = 0;
     }
-    else if(delay_from_start < (m_adsr->ADR() + std::max(ms(0), (m_gate_time - m_adsr->AD()))))
+    else if(delay_from_start < (m_adsr->ADSR(m_gate_time)))
     {
         phase = RELEASE;
         if(m_adsr->R() == ms(0))
@@ -134,7 +133,7 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
         }
         else
         {
-            progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->AD().count() - std::max(ms(0), (m_gate_time - m_adsr->AD())).count()) / static_cast<double>(m_adsr->R().count());
+            progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->ADS(m_gate_time).count()) / static_cast<double>(m_adsr->R().count());
         }
     }
     else

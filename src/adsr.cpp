@@ -1,5 +1,7 @@
 #include "adsr.h"
 
+#include <algorithm>
+
 CADSR::CADSR(int attack, int decay, int sustain, int release) :
     m_attack(ms(attack)),
     m_decay(ms(decay)),
@@ -49,15 +51,25 @@ ms CADSR::R(void) const
 
 ms CADSR::AD(void) const
 {
-    return m_attack + m_decay;
+    return A() + D();
 }
 
 ms CADSR::DR(void) const
 {
-    return m_decay + m_release;
+    return D() + R();
+}
+
+ms CADSR::ADS(ms gate_time) const
+{
+    return AD() + std::max(ms(0), (gate_time - AD()));
 }
 
 ms CADSR::ADR(void) const
 {
-    return m_attack + m_decay + m_release;
+    return A() + D() + R();
+}
+
+ms CADSR::ADSR(ms gate_time) const
+{
+    return ADR() + std::max(ms(0), (gate_time - AD()));
 }

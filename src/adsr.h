@@ -19,7 +19,9 @@ public:
     ms R(void) const;
     ms AD(void) const;
     ms DR(void) const;
+    ms ADS(ms gate_time) const;
     ms ADR(void) const;
+    ms ADSR(ms gate_time) const;
 
 private:
     ms  m_attack;
