@@ -12,15 +12,3 @@ src/adsr.txt
 
 # Build objects
 *.o
-
-# Qt build files
-src/moc_*
-src/.qmake.stash
-src/Makefile
-
-# QtCreator files
-dmxstuff.config
-dmxstuff.creator
-dmxstuff.creator.user
-dmxstuff.files
-dmxstuff.includes
