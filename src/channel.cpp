@@ -3,6 +3,8 @@
 
 using namespace std::chrono;
 
+#include <algorithm>
+
 CChannel::CChannel(void) :
     m_adsr(nullptr),
     m_max_velocity(0),
