@@ -12,13 +12,14 @@ class MainWindow;
 class CSynesthesizer
 {
 public:
-    CSynesthesizer(const MainWindow& mainwindow);
+    CSynesthesizer(void);
     ~CSynesthesizer(void);
 
     void Init(int argc, char *argv[]);
     void Run(void);
 
 private:
+    void ReadSettings(void);
     void InitDMX(void);
     void InitASeqDump(int argc, char *argv[]);
     void ExitASeqDump(void);
@@ -28,7 +29,7 @@ private:
     void SendDmx(int channel);
 
 private:
-    const MainWindow&   m_mainwindow;
+    CADSR               m_adsr;
     k8062_client        m_dmx;
     CChannel            m_channels[MAX_CHANNELS];
     struct pollfd*      m_pfds;

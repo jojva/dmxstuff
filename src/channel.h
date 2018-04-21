@@ -19,7 +19,7 @@ public:
 public:
     CChannel(void);
 
-    void NoteOn(CADSR *adsr, int max_velocity, bool is_pedal_sustained);
+    void NoteOn(const CADSR& adsr, int max_velocity, bool is_pedal_sustained);
     void NoteOff(void);
     void ReleaseSustainPedal(void);
     void CheckGateClosed(void);

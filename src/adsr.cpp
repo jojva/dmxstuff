@@ -22,37 +22,42 @@ void CADSR::ApplyMaxVelocity(int max_velocity)
     m_sustain_absolute = (max_velocity * m_sustain_percentage) / 100;
 }
 
-ms CADSR::A(void)
+ms CADSR::A(void) const
 {
     return m_attack;
 }
 
-ms CADSR::D(void)
+ms CADSR::D(void) const
 {
     return m_decay;
 }
 
-int CADSR::S(void)
+int CADSR::S(void) const
 {
     return m_sustain_absolute;
 }
 
-ms CADSR::R(void)
+int CADSR::SRelative(void) const
+{
+    return m_sustain_percentage;
+}
+
+ms CADSR::R(void) const
 {
     return m_release;
 }
 
-ms CADSR::AD(void)
+ms CADSR::AD(void) const
 {
     return m_attack + m_decay;
 }
 
-ms CADSR::DR(void)
+ms CADSR::DR(void) const
 {
     return m_decay + m_release;
 }
 
-ms CADSR::ADR(void)
+ms CADSR::ADR(void) const
 {
     return m_attack + m_decay + m_release;
 }

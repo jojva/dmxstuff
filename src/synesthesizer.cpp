@@ -5,10 +5,9 @@ extern "C"
 #include "aseqdump.h"
 }
 
-#include "mainwindow.h"
-
 #include <algorithm>
 #include <chrono>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -16,12 +15,14 @@ extern "C"
 #include <getopt.h>
 #include <sys/poll.h>
 
+#define FILE_CONFIG_NAME "adsr.txt"
+
 using namespace std::chrono;
 
 #define DELAY_SUSTAIN_RELEASE   80
 
-CSynesthesizer::CSynesthesizer(const MainWindow &mainwindow) :
-    m_mainwindow(mainwindow),
+CSynesthesizer::CSynesthesizer(void) :
+    m_adsr(0, 0, 0, 0),
     m_dmx(),
     m_pfds(NULL),
     m_npfds(0),
@@ -38,6 +39,28 @@ void CSynesthesizer::Init(int argc, char *argv[])
 {
     InitDMX();
     InitASeqDump(argc, argv);
+    ReadSettings();
+}
+
+void CSynesthesizer::ReadSettings(void)
+{
+    std::ifstream adsrfile(FILE_CONFIG_NAME);
+    if(adsrfile.is_open())
+    {
+        int attack;
+        int decay;
+        int sustain;
+        int release;
+        adsrfile >> attack;
+        adsrfile >> decay;
+        adsrfile >> sustain;
+        adsrfile >> release;
+        m_adsr = CADSR(attack, decay, sustain, release);
+    }
+    else
+    {
+        m_adsr = CADSR(300, 300, 70, 300);
+    }
 }
 
 void CSynesthesizer::InitDMX(void)
@@ -162,7 +185,7 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
 //            m_channels[channel].NoteOn(m_adsr, ev->data.note.velocity * 2);
-            m_channels[channel].NoteOn(m_mainwindow.GetADSR(), 254, m_sustain_pedal_on);
+            m_channels[channel].NoteOn(m_adsr, 254, m_sustain_pedal_on);
         }
         else
         {

@@ -12,13 +12,14 @@ public:
 
     void ApplyMaxVelocity(int max_velocity);
 
-    ms A(void);
-    ms D(void);
-    int S(void);
-    ms R(void);
-    ms AD(void);
-    ms DR(void);
-    ms ADR(void);
+    ms A(void) const;
+    ms D(void) const;
+    int S(void) const;
+    int SRelative(void) const;
+    ms R(void) const;
+    ms AD(void) const;
+    ms DR(void) const;
+    ms ADR(void) const;
 
 private:
     ms  m_attack;
