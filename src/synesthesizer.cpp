@@ -231,7 +231,7 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
         {
             // Sustain pedal
             m_sustain_pedal_on = (ev->data.control.value >= 64);
-            if(m_sustain_pedal_on)
+            if(!m_sustain_pedal_on)
             {
                 for(int channel = 0; channel < MAX_CHANNELS; channel++)
                 {
