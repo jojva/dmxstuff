@@ -27,6 +27,7 @@ void CChannel::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustain
     {
         rollback_time = ms((current_velocity * m_adsr->A()) / m_max_velocity);
     }
+    m_gate_time = ms(0);
     m_trigger_time = duration_cast<ms>(system_clock::now().time_since_epoch() - rollback_time);
     m_max_velocity = max_velocity;
     delete m_adsr;
@@ -50,7 +51,7 @@ void CChannel::ReleaseSustainPedal(void)
 
 void CChannel::CheckGateClosed(void)
 {
-    if(!m_is_note_on && !m_is_pedal_sustained)
+    if(!m_is_note_on && !m_is_pedal_sustained && (m_gate_time == ms(0)))
     {
         m_gate_time = duration_cast<ms>(system_clock::now().time_since_epoch() - m_trigger_time);
     }
@@ -122,7 +123,7 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
         phase = SUSTAIN;
         progress_percentage = 0;
     }
-    else if(delay_from_start < (m_gate_time + m_adsr->R()))
+    else if(delay_from_start < (m_adsr->ADR() + std::max(ms(0), (m_gate_time - m_adsr->AD()))))
     {
         phase = RELEASE;
         if(m_adsr->R() == ms(0))
@@ -131,7 +132,7 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
         }
         else
         {
-            progress_percentage = static_cast<double>(delay_from_start.count() - m_gate_time.count()) / static_cast<double>(m_adsr->R().count());
+            progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->AD().count() - std::max(ms(0), (m_gate_time - m_adsr->AD())).count()) / static_cast<double>(m_adsr->R().count());
         }
     }
     else
