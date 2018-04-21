@@ -7,14 +7,15 @@
 
 #define MAX_CHANNELS    12
 
+class MainWindow;
+
 class CSynesthesizer
 {
 public:
-    CSynesthesizer(void);
+    CSynesthesizer(const MainWindow& mainwindow);
     ~CSynesthesizer(void);
 
     void Init(int argc, char *argv[]);
-    void SetADSR(int attack, int decay, int sustain, int release);
     void Run(void);
 
 private:
@@ -27,9 +28,9 @@ private:
     void SendDmx(int channel);
 
 private:
-    k8062_client    m_dmx;
-    CChannel::SADSR m_adsr;
-    CChannel        m_channels[MAX_CHANNELS];
-    struct pollfd*  m_pfds;
-    int             m_npfds;
+    const MainWindow&   m_mainwindow;
+    k8062_client        m_dmx;
+    CChannel            m_channels[MAX_CHANNELS];
+    struct pollfd*      m_pfds;
+    int                 m_npfds;
 };

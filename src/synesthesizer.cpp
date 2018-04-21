@@ -5,6 +5,8 @@ extern "C"
 #include "aseqdump.h"
 }
 
+#include "mainwindow.h"
+
 #include <algorithm>
 #include <chrono>
 #include <stdio.h>
@@ -18,9 +20,9 @@ using namespace std::chrono;
 
 #define DELAY_SUSTAIN_RELEASE   80
 
-CSynesthesizer::CSynesthesizer(void) :
+CSynesthesizer::CSynesthesizer(const MainWindow &mainwindow) :
+    m_mainwindow(mainwindow),
     m_dmx(),
-    m_adsr(),
     m_pfds(NULL),
     m_npfds(0)
 {
@@ -115,14 +117,6 @@ void CSynesthesizer::ExitASeqDump(void)
     snd_seq_close(seq);
 }
 
-void CSynesthesizer::SetADSR(int attack, int decay, int sustain, int release)
-{
-    m_adsr.attack = ms(attack);
-    m_adsr.decay = ms(decay);
-    m_adsr.sustain = sustain;
-    m_adsr.release = ms(release);
-}
-
 void CSynesthesizer::Run(void)
 {
     for (;;) {
@@ -167,7 +161,7 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
 //            m_channels[channel].NoteOn(m_adsr, ev->data.note.velocity * 2);
-            m_channels[channel].NoteOn(m_adsr, 254);
+            m_channels[channel].NoteOn(m_mainwindow.GetADSR(), 254);
         }
         else
         {

@@ -9,9 +9,8 @@
 
 #define FILE_CONFIG_NAME "adsr.txt"
 
-MainWindow::MainWindow(CSynesthesizer &synesthesizer)
-    : synesthesizer(synesthesizer)
-    , timer(new QTimer(this))
+MainWindow::MainWindow(void)
+    : timer(new QTimer(this))
     , attackSpinbox(new QSpinBox)
     , decaySpinbox(new QSpinBox)
     , sustainSpinbox(new QSpinBox)
@@ -25,6 +24,16 @@ MainWindow::MainWindow(CSynesthesizer &synesthesizer)
 
     connect(timer, SIGNAL(timeout()), this, SLOT(update()));
     timer->start(0);
+}
+
+void MainWindow::AttachSynesthesizer(CSynesthesizer *synesthesizer)
+{
+    synesthesizer = synesthesizer;
+}
+
+CADSR* MainWindow::GetADSR(void) const
+{
+    return new CADSR(attackSpinbox->value(), decaySpinbox->value(), sustainSpinbox->value(), releaseSpinbox->value());
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -121,14 +130,6 @@ void MainWindow::buildGui()
     show();
 }
 
-void MainWindow::updateADSRview()
-{
-    series->replace(1, attackSpinbox->value(), 100);
-    series->replace(2, attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
-    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
-    chart->createDefaultAxes();
-}
-
 void MainWindow::setupSignals()
 {
     connect(attackSpinbox, SIGNAL(valueChanged(int)), this, SLOT(adsrChanged()));
@@ -139,11 +140,13 @@ void MainWindow::setupSignals()
 
 void MainWindow::adsrChanged()
 {
-    updateADSRview();
-    synesthesizer.SetADSR(attackSpinbox->value(), decaySpinbox->value(), sustainSpinbox->value(), releaseSpinbox->value());
+    series->replace(1, attackSpinbox->value(), 100);
+    series->replace(2, attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
+    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
+    chart->createDefaultAxes();
 }
 
 void MainWindow::update()
 {
-    synesthesizer.Run();
+    synesthesizer->Run();
 }

@@ -18,7 +18,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(CSynesthesizer& synesthesizer);
+    MainWindow(void);
+
+    void AttachSynesthesizer(CSynesthesizer* synesthesizer);
+    CADSR *GetADSR(void) const;
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -35,7 +38,7 @@ private:
     void setupSignals();
 
 private:
-    CSynesthesizer& synesthesizer;
+    CSynesthesizer* synesthesizer;
 
     QTimer* timer;
     QSpinBox* attackSpinbox;

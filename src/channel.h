@@ -1,20 +1,12 @@
 #pragma once
 
-#include <chrono>
+#include "adsr.h"
 
-typedef std::chrono::milliseconds ms;
+#include <chrono>
 
 class CChannel
 {
 public:
-    struct SADSR
-    {
-        ms  attack;
-        ms  decay;
-        int sustain;
-        ms  release;
-    };
-
     enum EPhase {
         BEFORE,
         ATTACK,
@@ -27,13 +19,13 @@ public:
 public:
     CChannel(void);
 
-    void NoteOn(const SADSR &adsr, int max_velocity);
+    void NoteOn(CADSR *adsr, int max_velocity);
     void NoteOff(void);
     int ComputeVelocity(void);
     void ComputePhase(EPhase& phase, int& progress_percentage);
 
 private:
-    SADSR   m_adsr;
+    CADSR*  m_adsr;
     int     m_max_velocity;
     ms      m_trigger_time;
 };
