@@ -1,4 +1,4 @@
-QT += widgets charts
+QT += widgets
 
 HEADERS       = adsr.h \
                 aseqdump.h \

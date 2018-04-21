@@ -45,6 +45,6 @@ private:
     QSpinBox* decaySpinbox;
     QSpinBox* sustainSpinbox;
     QSpinBox* releaseSpinbox;
-    QtCharts::QLineSeries *series;
-    QtCharts::QChart *chart;
+//    QtCharts::QLineSeries *series;
+//    QtCharts::QChart *chart;
 };

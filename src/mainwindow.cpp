@@ -1,9 +1,9 @@
 #include "mainwindow.h"
 
 #include <QtWidgets>
-#include <QtCharts/QChart>
-#include <QtCharts/QChartView>
-#include <QtCharts/QLineSeries>
+//#include <QtCharts/QChart>
+//#include <QtCharts/QChartView>
+//#include <QtCharts/QLineSeries>
 
 #include <fstream>
 
@@ -15,8 +15,8 @@ MainWindow::MainWindow(void)
     , decaySpinbox(new QSpinBox)
     , sustainSpinbox(new QSpinBox)
     , releaseSpinbox(new QSpinBox)
-    , series(new QtCharts::QLineSeries)
-    , chart(new QtCharts::QChart)
+//    , series(new QtCharts::QLineSeries)
+//    , chart(new QtCharts::QChart)
 {
     buildGui();
     setupSignals();
@@ -105,24 +105,24 @@ void MainWindow::buildGui()
     adsrGroupbox->setLayout(adsrFormLayout);
 
     // ADSR view part
-    series->append(0, 0);
-    series->append(attackSpinbox->value(), 100);
-    series->append(attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
-    series->append(attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
+//    series->append(0, 0);
+//    series->append(attackSpinbox->value(), 100);
+//    series->append(attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
+//    series->append(attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
 
-    chart->legend()->hide();
-    chart->addSeries(series);
-    chart->createDefaultAxes();
-    chart->setTitle("ADSR view");
+//    chart->legend()->hide();
+//    chart->addSeries(series);
+//    chart->createDefaultAxes();
+//    chart->setTitle("ADSR view");
 
-    QtCharts::QChartView *chartView = new QtCharts::QChartView(chart);
-    chartView->setRenderHint(QPainter::Antialiasing);
+//    QtCharts::QChartView *chartView = new QtCharts::QChartView(chart);
+//    chartView->setRenderHint(QPainter::Antialiasing);
 
     // Top-level widgets
     QVBoxLayout *layout = new QVBoxLayout;
     layout->setAlignment(Qt::AlignHCenter);
     layout->addWidget(adsrGroupbox);
-    layout->addWidget(chartView);
+//    layout->addWidget(chartView);
 
     QWidget *widget = new QWidget();
     widget->setLayout(layout);
@@ -140,10 +140,10 @@ void MainWindow::setupSignals()
 
 void MainWindow::adsrChanged()
 {
-    series->replace(1, attackSpinbox->value(), 100);
-    series->replace(2, attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
-    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
-    chart->createDefaultAxes();
+//    series->replace(1, attackSpinbox->value(), 100);
+//    series->replace(2, attackSpinbox->value() + decaySpinbox->value(), sustainSpinbox->value());
+//    series->replace(3, attackSpinbox->value() + decaySpinbox->value() + releaseSpinbox->value(), 0);
+//    chart->createDefaultAxes();
 }
 
 void MainWindow::update()
