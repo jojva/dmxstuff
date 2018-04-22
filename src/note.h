@@ -24,8 +24,8 @@ public:
     void NoteOff(void);
     void ReleaseSustainPedal(void);
     void CheckGateClosed(void);
-    int ComputeVelocity(void);
-    void ComputePhase(EPhase& phase, double &progress_percentage);
+    int ComputeVelocity(void) const;
+    void ComputePhase(EPhase& phase, double &progress_percentage) const;
 
 private:
     CADSR*  m_adsr;

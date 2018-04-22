@@ -53,7 +53,7 @@ void CNote::CheckGateClosed(void)
     }
 }
 
-int CNote::ComputeVelocity(void)
+int CNote::ComputeVelocity(void) const
 {
     if(m_max_velocity == 0)
     {
@@ -88,13 +88,12 @@ int CNote::ComputeVelocity(void)
     }
 }
 
-void CNote::ComputePhase(EPhase& phase, double& progress_percentage)
+void CNote::ComputePhase(EPhase& phase, double& progress_percentage) const
 {
     ms now = duration_cast<ms>(system_clock::now().time_since_epoch());
     ms delay_from_start = duration_cast<ms>(now - m_trigger_time);
-    if(delay_from_start < ms(0))
+    if(nullptr == m_adsr)
     {
-        // This should never happen
         phase = BEFORE;
         progress_percentage = 0.0;
     }
