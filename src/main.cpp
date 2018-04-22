@@ -1,5 +1,6 @@
 #include "synesthesizer.h"
 
+#include <iostream>
 #include <signal.h>
 
 void sig_handler(int signum)
