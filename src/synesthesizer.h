@@ -5,7 +5,7 @@
 
 #include <alsa/asoundlib.h>
 
-#define NB_KEYS 88
+#define NB_KEYS 128
 
 class MainWindow;
 
