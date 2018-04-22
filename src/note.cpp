@@ -65,25 +65,18 @@ int CNote::ComputeVelocity(void) const
     switch(phase)
     {
     case BEFORE:
-        std::cout << "BEFORE" << std::endl;
         return 0;
     case AFTER:
-        std::cout << "AFTER" << std::endl;
         return 0;
     case ATTACK:
-        std::cout << "ATTACK" << std::endl;
         return static_cast<int>(m_max_velocity * progress_percentage);
     case DECAY:
-        std::cout << "DECAY" << std::endl;
         return static_cast<int>(m_adsr->S() + ((m_max_velocity - m_adsr->S()) * (1.0 - progress_percentage)));
     case SUSTAIN:
-        std::cout << "SUSTAIN" << std::endl;
         return m_adsr->S();
     case RELEASE:
-        std::cout << "RELEASE" << std::endl;
         return static_cast<int>(m_adsr->S() * (1.0 - progress_percentage));
     default:
-        std::cout << "ERROR" << std::endl;
         return 0;
     }
 }
@@ -128,10 +121,6 @@ void CNote::ComputePhase(EPhase& phase, double& progress_percentage) const
     }
     else if(delay_from_start < (m_adsr->ADSR(m_gate_time)))
     {
-//        std::cout << "RELEASE" << std::endl;
-//        std::cout << "delay_from_start : " << delay_from_start.count() << std::endl;
-//        std::cout << "m_gate_time : " << m_gate_time.count() << std::endl;
-//        std::cout << "m_adsr->R() : " << m_adsr->R().count() << std::endl;
         phase = RELEASE;
         if(m_adsr->R() == ms(0))
         {
