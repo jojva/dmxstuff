@@ -15,11 +15,10 @@ extern "C"
 #include <getopt.h>
 #include <sys/poll.h>
 
-#define FILE_CONFIG_NAME "adsr.txt"
-
 using namespace std::chrono;
 
-#define DELAY_SUSTAIN_RELEASE   80
+#define NB_CHANNELS         12
+#define FILE_CONFIG_NAME    "adsr.txt"
 
 CSynesthesizer::CSynesthesizer(void) :
     m_adsr(0, 0, 0, 0),
@@ -165,7 +164,7 @@ void CSynesthesizer::Run(void)
 
 void CSynesthesizer::UpdateChannels(void)
 {
-    for(int channel = 0; channel < MAX_CHANNELS; channel++)
+    for(int channel = 0; channel < NB_CHANNELS; channel++)
     {
         SendDmx(channel);
     }
@@ -177,21 +176,19 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
     switch (ev->type) {
     case SND_SEQ_EVENT_NOTEON:
     {
-        // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
-        int channel = ev->data.note.note % 12;
         if (ev->data.note.velocity)
         {
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-//            m_channels[channel].NoteOn(m_adsr, ev->data.note.velocity * 2);
-            m_channels[channel].NoteOn(m_adsr, 254, m_sustain_pedal_on);
+//            m_notes[ev->data.note.note].NoteOn(m_adsr, ev->data.note.velocity * 2);
+            m_notes[ev->data.note.note].NoteOn(m_adsr, 254, m_sustain_pedal_on);
         }
         else
         {
             printf("Note off               %2d, note %d\n",
                    ev->data.note.channel, ev->data.note.note);
-            m_channels[channel].NoteOff();
+            m_notes[ev->data.note.note].NoteOff();
         }
         break;
     }
@@ -199,9 +196,7 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
     {
         printf("Note off               %2d, note %d, velocity %d\n",
                ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
-        // Assign each note to a channel number. Since there are 12 midi notes, we compute the channel by modulo 12.
-        int channel = ev->data.note.note % 12;
-        m_channels[channel].NoteOff();
+        m_notes[ev->data.note.note].NoteOff();
         break;
     }
     case SND_SEQ_EVENT_KEYPRESS:
@@ -233,9 +228,9 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
             m_sustain_pedal_on = (ev->data.control.value >= 64);
             if(!m_sustain_pedal_on)
             {
-                for(int channel = 0; channel < MAX_CHANNELS; channel++)
+                for(int note = 0; note < NB_KEYS; note++)
                 {
-                    m_channels[channel].ReleaseSustainPedal();
+                    m_notes[note].ReleaseSustainPedal();
                 }
             }
         }
@@ -371,7 +366,11 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
 
 void CSynesthesizer::SendDmx(int channel)
 {
-    int velocity = m_channels[channel].ComputeVelocity();
+    int velocity = 0;
+    for(int note = channel % 12; note < NB_KEYS; note += NB_CHANNELS)
+    {
+        velocity = std::max(velocity, m_notes[note].ComputeVelocity());
+    }
     printf("Sending velocity %d to channel %d\n", (BYTE)velocity, (BYTE)channel);
     m_dmx.set_channel((BYTE)channel, (BYTE)velocity);
 }

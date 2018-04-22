@@ -8,10 +8,10 @@ aseqdump.o: aseqdump.c aseqdump.h
 adsr.o: adsr.cpp adsr.h
 	gcc $(CFLAGS) -c adsr.cpp -lasound
 
-channel.o: adsr.o channel.cpp channel.h
-	gcc $(CFLAGS) -c adsr.o channel.cpp -lasound
+note.o: adsr.h note.cpp note.h
+	gcc $(CFLAGS) -c note.cpp -lasound
 
-synesthesizer.o: synesthesizer.cpp synesthesizer.h
+synesthesizer.o: note.h synesthesizer.cpp synesthesizer.h
 	g++ $(CFLAGS) -c synesthesizer.cpp $(CPPFLAGS) -lasound
 
 blackout: k8062.o blackout.cpp
@@ -23,8 +23,8 @@ whiteout: k8062.o whiteout.cpp
 sinewaves: k8062.o sinewaves.cpp
 	g++ $(CFLAGS) -o sinewaves sinewaves.cpp k8062.o -lm
 
-synesthesizer: k8062.o aseqdump.o channel.o adsr.o synesthesizer.o main.cpp
-	g++ $(CFLAGS) -o synesthesizer main.cpp synesthesizer.o k8062.o aseqdump.o channel.o adsr.o -lm -lasound
+synesthesizer: k8062.o aseqdump.o note.o adsr.o synesthesizer.o main.cpp
+	g++ $(CFLAGS) -o synesthesizer main.cpp synesthesizer.o k8062.o aseqdump.o note.o adsr.o -lm -lasound
 
 k8062.o: k8062.cpp k8062.h
 	g++ $(CFLAGS) -c k8062.cpp

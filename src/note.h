@@ -4,7 +4,7 @@
 
 #include <chrono>
 
-class CChannel
+class CNote
 {
 public:
     enum EPhase {
@@ -17,8 +17,9 @@ public:
     };
 
 public:
-    CChannel(void);
+    CNote(void);
 
+    // TODO : ADSR is loaded once at start-up. Don't send it through NoteOn as it will never change.
     void NoteOn(const CADSR& adsr, int max_velocity, bool is_pedal_sustained);
     void NoteOff(void);
     void ReleaseSustainPedal(void);

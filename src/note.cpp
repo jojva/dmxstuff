@@ -1,10 +1,11 @@
-#include "channel.h"
+#include "note.h"
 #include "synesthesizer.h"
 
 using namespace std::chrono;
 
+#include <iostream>
 
-CChannel::CChannel(void) :
+CNote::CNote(void) :
     m_adsr(nullptr),
     m_max_velocity(0),
     m_trigger_time(0),
@@ -14,14 +15,8 @@ CChannel::CChannel(void) :
 {
 }
 
-void CChannel::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustained)
+void CNote::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustained)
 {
-    if(m_is_note_on)
-    {
-        // Note is already being played, this means the same note from another octave is being played.
-        // Do nothing in that case
-        return;
-    }
     ms rollback_time = ms(0);
     int current_velocity = ComputeVelocity();
     if(current_velocity > 0)
@@ -38,19 +33,19 @@ void CChannel::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustain
     m_is_pedal_sustained = is_pedal_sustained;
 }
 
-void CChannel::NoteOff(void)
+void CNote::NoteOff(void)
 {
     m_is_note_on = false;
     CheckGateClosed();
 }
 
-void CChannel::ReleaseSustainPedal(void)
+void CNote::ReleaseSustainPedal(void)
 {
     m_is_pedal_sustained = false;
     CheckGateClosed();
 }
 
-void CChannel::CheckGateClosed(void)
+void CNote::CheckGateClosed(void)
 {
     if(!m_is_note_on && !m_is_pedal_sustained && (m_gate_time == ms(0)))
     {
@@ -58,7 +53,7 @@ void CChannel::CheckGateClosed(void)
     }
 }
 
-int CChannel::ComputeVelocity(void)
+int CNote::ComputeVelocity(void)
 {
     if(m_max_velocity == 0)
     {
@@ -70,22 +65,30 @@ int CChannel::ComputeVelocity(void)
     switch(phase)
     {
     case BEFORE:
+        std::cout << "BEFORE" << std::endl;
+        return 0;
     case AFTER:
+        std::cout << "AFTER" << std::endl;
         return 0;
     case ATTACK:
+        std::cout << "ATTACK" << std::endl;
         return static_cast<int>(m_max_velocity * progress_percentage);
     case DECAY:
+        std::cout << "DECAY" << std::endl;
         return static_cast<int>(m_adsr->S() + ((m_max_velocity - m_adsr->S()) * (1.0 - progress_percentage)));
     case SUSTAIN:
+        std::cout << "SUSTAIN" << std::endl;
         return m_adsr->S();
     case RELEASE:
+        std::cout << "RELEASE" << std::endl;
         return static_cast<int>(m_adsr->S() * (1.0 - progress_percentage));
     default:
+        std::cout << "ERROR" << std::endl;
         return 0;
     }
 }
 
-void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
+void CNote::ComputePhase(EPhase& phase, double& progress_percentage)
 {
     ms now = duration_cast<ms>(system_clock::now().time_since_epoch());
     ms delay_from_start = duration_cast<ms>(now - m_trigger_time);
@@ -126,6 +129,10 @@ void CChannel::ComputePhase(EPhase& phase, double& progress_percentage)
     }
     else if(delay_from_start < (m_adsr->ADSR(m_gate_time)))
     {
+//        std::cout << "RELEASE" << std::endl;
+//        std::cout << "delay_from_start : " << delay_from_start.count() << std::endl;
+//        std::cout << "m_gate_time : " << m_gate_time.count() << std::endl;
+//        std::cout << "m_adsr->R() : " << m_adsr->R().count() << std::endl;
         phase = RELEASE;
         if(m_adsr->R() == ms(0))
         {

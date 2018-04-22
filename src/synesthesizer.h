@@ -1,11 +1,11 @@
 #pragma once
 
 #include "k8062.h"
-#include "channel.h"
+#include "note.h"
 
 #include <alsa/asoundlib.h>
 
-#define MAX_CHANNELS    12
+#define NB_KEYS 88
 
 class MainWindow;
 
@@ -31,7 +31,7 @@ private:
 private:
     CADSR               m_adsr;
     k8062_client        m_dmx;
-    CChannel            m_channels[MAX_CHANNELS];
+    CNote               m_notes[NB_KEYS];
     struct pollfd*      m_pfds;
     int                 m_npfds;
     bool                m_sustain_pedal_on;
