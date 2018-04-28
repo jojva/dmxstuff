@@ -25,7 +25,8 @@ CSynesthesizer::CSynesthesizer(void) :
     m_dmx(),
     m_pfds(NULL),
     m_npfds(0),
-    m_sustain_pedal_on(false)
+    m_sustain_pedal_on(false),
+    m_soft_pedal_on(false)
 {
 }
 
@@ -182,9 +183,9 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
         {
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
-            // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-            m_notes[ev->data.note.note].NoteOn(m_adsr, std::min(ev->data.note.velocity * 4, 254), m_sustain_pedal_on);
-//            m_notes[ev->data.note.note].NoteOn(m_adsr, 254, m_sustain_pedal_on);
+            // MIDI velocity is in the range 0-127, we use a multiplier to get it into the 0-254 range of DMX
+            int multiplier = m_soft_pedal_on ? 2 : 4;
+            m_notes[ev->data.note.note].NoteOn(m_adsr, std::min(ev->data.note.velocity * multiplier, 254), m_sustain_pedal_on);
         }
         else
         {
@@ -211,7 +212,6 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
         switch(ev->data.control.param)
         {
             case 64:
-            {
                 // Sustain pedal
                 m_sustain_pedal_on = (ev->data.control.value >= 64);
                 if(!m_sustain_pedal_on)
@@ -221,17 +221,18 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
                         m_notes[note].ReleaseSustainPedal();
                     }
                 }
-            }
-            break;
+                break;
             case 66:
-            {
                 // Sostenuto pedal
                 for(int note = 0; note < NB_KEYS; note++)
                 {
                     m_notes[note].TriggerSostenuto((ev->data.control.value >= 64));
                 }
-            }
-            break;
+                break;
+            case 67:
+                // Soft pedal
+                m_soft_pedal_on = (ev->data.control.value >= 64);
+                break;
         }
         break;
     case SND_SEQ_EVENT_PGMCHANGE:
