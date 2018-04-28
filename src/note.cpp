@@ -11,7 +11,8 @@ CNote::CNote(void) :
     m_trigger_time(0),
     m_gate_time(0),
     m_is_note_on(false),
-    m_is_pedal_sustained(false)
+    m_is_pedal_sustained(false),
+    m_is_sostenuto(false)
 {
 }
 
@@ -45,9 +46,25 @@ void CNote::ReleaseSustainPedal(void)
     CheckGateClosed();
 }
 
+void CNote::TriggerSostenuto(bool abEnabled)
+{
+    if(abEnabled)
+    {
+        if(m_is_note_on)
+        {
+            m_is_sostenuto = true;
+        }
+    }
+    else
+    {
+        m_is_sostenuto = false;
+        CheckGateClosed();
+    }
+}
+
 void CNote::CheckGateClosed(void)
 {
-    if(!m_is_note_on && !m_is_pedal_sustained && (m_gate_time == ms(0)))
+    if(!m_is_note_on && !m_is_pedal_sustained && !m_is_sostenuto && (m_gate_time == ms(0)))
     {
         m_gate_time = duration_cast<ms>(system_clock::now().time_since_epoch() - m_trigger_time);
     }
@@ -114,7 +131,7 @@ void CNote::ComputePhase(EPhase& phase, double& progress_percentage) const
             progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->A().count()) / static_cast<double>(m_adsr->D().count());
         }
     }
-    else if(delay_from_start < (m_adsr->ADS()) && (m_is_note_on || m_is_pedal_sustained))
+    else if(delay_from_start < (m_adsr->ADS()) && (m_is_note_on || m_is_pedal_sustained || m_is_sostenuto))
     {
         phase = SUSTAIN;
         progress_percentage = 0;

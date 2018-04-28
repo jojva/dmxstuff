@@ -208,17 +208,30 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
     case SND_SEQ_EVENT_CONTROLLER:
         printf("Control change         %2d, controller %d, value %d\n",
                ev->data.control.channel, ev->data.control.param, ev->data.control.value);
-        if(ev->data.control.param == 64)
+        switch(ev->data.control.param)
         {
-            // Sustain pedal
-            m_sustain_pedal_on = (ev->data.control.value >= 64);
-            if(!m_sustain_pedal_on)
+            case 64:
             {
-                for(int note = 0; note < NB_KEYS; note++)
+                // Sustain pedal
+                m_sustain_pedal_on = (ev->data.control.value >= 64);
+                if(!m_sustain_pedal_on)
                 {
-                    m_notes[note].ReleaseSustainPedal();
+                    for(int note = 0; note < NB_KEYS; note++)
+                    {
+                        m_notes[note].ReleaseSustainPedal();
+                    }
                 }
             }
+            break;
+            case 66:
+            {
+                // Sostenuto pedal
+                for(int note = 0; note < NB_KEYS; note++)
+                {
+                    m_notes[note].TriggerSostenuto((ev->data.control.value >= 64));
+                }
+            }
+            break;
         }
         break;
     case SND_SEQ_EVENT_PGMCHANGE:

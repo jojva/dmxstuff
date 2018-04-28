@@ -23,6 +23,7 @@ public:
     void NoteOn(const CADSR& adsr, int max_velocity, bool is_pedal_sustained);
     void NoteOff(void);
     void ReleaseSustainPedal(void);
+    void TriggerSostenuto(bool abEnabled);
     void CheckGateClosed(void);
     int ComputeVelocity(void) const;
     void ComputePhase(EPhase& phase, double &progress_percentage) const;
@@ -34,4 +35,5 @@ private:
     ms      m_gate_time;
     bool    m_is_note_on;
     bool    m_is_pedal_sustained;
+    bool    m_is_sostenuto;
 };
