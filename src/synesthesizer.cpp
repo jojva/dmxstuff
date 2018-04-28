@@ -181,8 +181,8 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
             printf("Note on                %2d, note %d, velocity %d\n",
                    ev->data.note.channel, ev->data.note.note, ev->data.note.velocity);
             // MIDI velocity is in the range 0-127, we multiply it by 2 to get it in the range 0-254 of DMX
-//            m_notes[ev->data.note.note].NoteOn(m_adsr, ev->data.note.velocity * 2);
-            m_notes[ev->data.note.note].NoteOn(m_adsr, 254, m_sustain_pedal_on);
+            m_notes[ev->data.note.note].NoteOn(m_adsr, ev->data.note.velocity * 4, m_sustain_pedal_on);
+//            m_notes[ev->data.note.note].NoteOn(m_adsr, 254, m_sustain_pedal_on);
         }
         else
         {
@@ -206,6 +206,18 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
     case SND_SEQ_EVENT_CONTROLLER:
         printf("Control change         %2d, controller %d, value %d\n",
                ev->data.control.channel, ev->data.control.param, ev->data.control.value);
+        if(ev->data.control.param == 64)
+        {
+            // Sustain pedal
+            m_sustain_pedal_on = (ev->data.control.value >= 64);
+            if(!m_sustain_pedal_on)
+            {
+                for(int note = 0; note < NB_KEYS; note++)
+                {
+                    m_notes[note].ReleaseSustainPedal();
+                }
+            }
+        }
         break;
     case SND_SEQ_EVENT_PGMCHANGE:
         printf("Program change         %2d, program %d\n",
@@ -222,18 +234,6 @@ void CSynesthesizer::HandleMidiEvent(const snd_seq_event_t *ev)
     case SND_SEQ_EVENT_CONTROL14:
         printf("Control change         %2d, controller %d, value %5d\n",
                ev->data.control.channel, ev->data.control.param, ev->data.control.value);
-        if(ev->data.control.param == 64)
-        {
-            // Sustain pedal
-            m_sustain_pedal_on = (ev->data.control.value >= 64);
-            if(!m_sustain_pedal_on)
-            {
-                for(int note = 0; note < NB_KEYS; note++)
-                {
-                    m_notes[note].ReleaseSustainPedal();
-                }
-            }
-        }
         break;
     case SND_SEQ_EVENT_NONREGPARAM:
         printf("Non-reg. parameter     %2d, parameter %d, value %d\n",
