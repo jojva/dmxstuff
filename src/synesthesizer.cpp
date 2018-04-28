@@ -371,6 +371,5 @@ void CSynesthesizer::SendDmx(int channel)
     {
         velocity = std::max(velocity, m_notes[note].ComputeVelocity());
     }
-    printf("Sending velocity %d to channel %d\n", (BYTE)velocity, (BYTE)channel);
     m_dmx.set_channel((BYTE)channel, (BYTE)velocity);
 }
