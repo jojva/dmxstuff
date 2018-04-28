@@ -2,18 +2,20 @@
 
 #include <algorithm>
 
-CADSR::CADSR(int attack, int decay, int sustain, int release) :
+CADSR::CADSR(int attack, int decay, int sustain, int sustain_time_max, int release) :
     m_attack(ms(attack)),
     m_decay(ms(decay)),
     m_sustain_percentage(sustain),
+    m_sustain_time_max(sustain_time_max),
     m_release(ms(release))
 {
 }
 
-CADSR::CADSR(int attack, int decay, int sustain, int release, int max_velocity) :
+CADSR::CADSR(int attack, int decay, int sustain, int sustain_time_max, int release, int max_velocity) :
     m_attack(ms(attack)),
     m_decay(ms(decay)),
     m_sustain_percentage(sustain),
+    m_sustain_time_max(sustain_time_max),
     m_release(ms(release))
 {
     ApplyMaxVelocity(max_velocity);
@@ -44,6 +46,11 @@ int CADSR::SRelative(void) const
     return m_sustain_percentage;
 }
 
+ms CADSR::STimeMax(void) const
+{
+    return m_sustain_time_max;
+}
+
 ms CADSR::R(void) const
 {
     return m_release;
@@ -59,9 +66,14 @@ ms CADSR::DR(void) const
     return D() + R();
 }
 
+ms CADSR::ADS(void) const
+{
+    return AD() + std::max(ms(0), (m_sustain_time_max - AD()));
+}
+
 ms CADSR::ADS(ms gate_time) const
 {
-    return AD() + std::max(ms(0), (gate_time - AD()));
+    return AD() + std::max(ms(0), (std::min(gate_time, m_sustain_time_max) - AD()));
 }
 
 ms CADSR::ADR(void) const
@@ -69,7 +81,12 @@ ms CADSR::ADR(void) const
     return A() + D() + R();
 }
 
+ms CADSR::ADSR(void) const
+{
+    return ADR() + std::max(ms(0), (m_sustain_time_max - AD()));
+}
+
 ms CADSR::ADSR(ms gate_time) const
 {
-    return ADR() + std::max(ms(0), (gate_time - AD()));
+    return ADR() + std::max(ms(0), (std::min(gate_time, m_sustain_time_max) - AD()));
 }

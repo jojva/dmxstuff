@@ -21,7 +21,7 @@ using namespace std::chrono;
 #define FILE_CONFIG_NAME    "adsr.txt"
 
 CSynesthesizer::CSynesthesizer(void) :
-    m_adsr(0, 0, 0, 0),
+    m_adsr(0, 0, 0, 0, 0),
     m_dmx(),
     m_pfds(NULL),
     m_npfds(0),
@@ -49,16 +49,18 @@ void CSynesthesizer::ReadSettings(void)
         int attack;
         int decay;
         int sustain;
+        int sustain_time_max;
         int release;
         adsrfile >> attack;
         adsrfile >> decay;
         adsrfile >> sustain;
+        adsrfile >> sustain_time_max;
         adsrfile >> release;
-        m_adsr = CADSR(attack, decay, sustain, release);
+        m_adsr = CADSR(attack, decay, sustain, sustain_time_max, release);
     }
     else
     {
-        m_adsr = CADSR(300, 300, 70, 300);
+        m_adsr = CADSR(300, 300, 70, 8000 , 300);
     }
 }
 

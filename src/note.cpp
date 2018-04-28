@@ -114,7 +114,7 @@ void CNote::ComputePhase(EPhase& phase, double& progress_percentage) const
             progress_percentage = static_cast<double>(delay_from_start.count() - m_adsr->A().count()) / static_cast<double>(m_adsr->D().count());
         }
     }
-    else if(m_is_note_on || m_is_pedal_sustained)
+    else if(delay_from_start < (m_adsr->ADS()) && (m_is_note_on || m_is_pedal_sustained))
     {
         phase = SUSTAIN;
         progress_percentage = 0;
