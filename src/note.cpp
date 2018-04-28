@@ -27,7 +27,7 @@ void CNote::NoteOn(const CADSR &adsr, int max_velocity, bool is_pedal_sustained)
     m_trigger_time = duration_cast<ms>(system_clock::now().time_since_epoch() - rollback_time);
     m_max_velocity = max_velocity;
     delete m_adsr;
-    m_adsr = new CADSR(adsr.A().count(), adsr.D().count(), adsr.SRelative(), adsr.R().count());
+    m_adsr = new CADSR(adsr.A().count(), adsr.D().count(), adsr.SRelative(), adsr.STimeMax().count(), adsr.R().count());
     m_adsr->ApplyMaxVelocity(max_velocity);
     m_is_note_on = true;
     m_is_pedal_sustained = is_pedal_sustained;

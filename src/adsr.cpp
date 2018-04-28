@@ -73,7 +73,14 @@ ms CADSR::ADS(void) const
 
 ms CADSR::ADS(ms gate_time) const
 {
-    return AD() + std::max(ms(0), (std::min(gate_time, m_sustain_time_max) - AD()));
+    if(gate_time == ms(0))
+    {
+        return AD() + std::max(ms(0), (m_sustain_time_max - AD()));
+    }
+    else
+    {
+        return AD() + std::max(ms(0), (std::min(gate_time, m_sustain_time_max) - AD()));
+    }
 }
 
 ms CADSR::ADR(void) const
@@ -88,5 +95,12 @@ ms CADSR::ADSR(void) const
 
 ms CADSR::ADSR(ms gate_time) const
 {
-    return ADR() + std::max(ms(0), (std::min(gate_time, m_sustain_time_max) - AD()));
+    if(gate_time == ms(0))
+    {
+        return ADR() + std::max(ms(0), (m_sustain_time_max - AD()));
+    }
+    else
+    {
+        return ADR() + std::max(ms(0), (std::min(gate_time, m_sustain_time_max) - AD()));
+    }
 }
