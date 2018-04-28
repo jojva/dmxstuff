@@ -60,7 +60,7 @@ void CSynesthesizer::ReadSettings(void)
     }
     else
     {
-        m_adsr = CADSR(300, 300, 70, 8000 , 300);
+        m_adsr = CADSR(50, 100, 70, 5000, 200);
     }
 }
 
